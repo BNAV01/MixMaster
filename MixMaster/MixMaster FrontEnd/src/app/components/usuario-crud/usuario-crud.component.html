@@ -1,0 +1,176 @@
+<div class="container my-4">
+  <h2>Gestión de Usuarios</h2>
+
+  <!-- Botones para abrir el modal de creación y para obtener todos los usuarios -->
+  <div class="d-flex mb-3">
+    <button class="btn btn-primary me-2" (click)="openModal()">Crear Usuario</button>  <!-- Boton para abrir el modal de creación -->
+    <button class="btn btn-secondary" (click)="getAllUsuarios()">GetAll</button> <!-- Boton para obtener todos los usuarios a partir del metodo get all instanciado en el archivo usuario.service.ts--> 
+  </div>
+
+  <!-- Tabla de usuarios -->
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>RUT</th>
+        <th>Nombre</th>
+        <th>Apellido Paterno</th>
+        <th>Email</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let usuario of usuarios || []">
+        <td>{{ usuario.idUsuario }}</td>
+        <td>{{ usuario.rut }}</td>
+        <td>{{ usuario.nombre }}</td>
+        <td>{{ usuario.apellidoP }}</td>
+        <td>{{ usuario.email }}</td>
+        <td>
+          <button class="btn btn-sm btn-warning" (click)="editUsuario(usuario)">
+            Editar
+          </button>
+          <button
+            class="btn btn-sm btn-danger"
+            (click)="deleteUsuario(usuario.idUsuario)"
+            (click)="getAllUsuarios()"
+          >
+            Eliminar
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Modal de creación/edición -->
+  <div
+    class="modal fade"
+    [ngClass]="{ 'show d-block': modalOpen, 'd-none': !modalOpen }"
+    *ngIf="modalOpen"
+  >
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">
+            {{ editMode ? "Editar Usuario" : "Crear Usuario" }}
+          </h5>
+          <button
+            type="button"
+            class="btn-close"
+            (click)="closeModal()"
+          ></button>
+        </div>
+        <div class="modal-body">
+          <form (ngSubmit)="saveUsuario()">
+            <!-- Campo de rut -->
+            <div class="mb-3">
+              <label class="form-label">Rut</label>
+              <input
+                type="text"
+                [(ngModel)]="usuario.rut"
+                name="rut"
+                class="form-control"
+                required
+              />
+            </div>
+            <!-- Campo de nombre -->
+            <div class="mb-3">
+              <label class="form-label">Nombre</label>
+              <input
+                type="text"
+                [(ngModel)]="usuario.nombre"
+                name="nombre"
+                class="form-control"
+                required
+              />
+            </div>
+            <!-- Campo de  apellido paterno-->
+            <div class="mb-3">
+              <label class="form-label">Apellido Paterno</label>
+              <input
+                type="text"
+                [(ngModel)]="usuario.apellidoP"
+                name="apellidoP"
+                class="form-control"
+                required
+              />
+            </div>
+            <!-- Campo de  apellido materno-->
+            <div class="mb-3">
+              <label class="form-label">Apellido Materno</label>
+              <input
+                type="text"
+                [(ngModel)]="usuario.apellidoM"
+                name="apellidoM"
+                class="form-control"
+                required
+
+              />
+            </div>
+            <!-- Campo de  Telefono-->
+            <div class="mb-3">
+              <label class="form-label">Telefono</label>
+              <input
+                type="text"
+                [(ngModel)]="usuario.telefono"
+                name="telefono"
+                class="form-control"
+                required
+                placeholder="+56 9XXXXXXXX"mg                 
+              />
+            </div>
+            <!-- Campo de email -->
+            <div class="mb-3">
+              <label class="form-label">Email</label>
+              <input
+                type="email"
+                [(ngModel)]="usuario.email"
+                name="email"
+                class="form-control"
+                required
+              />
+            </div>
+            <!-- Campo de  Contraseña-->
+            <div class="mb-3">
+              <label class="form-label">Contraseña</label>
+              <input
+                type="password"
+                [(ngModel)]="usuario.clave"
+                name="clave"
+                class="form-control"
+                required
+              />
+            </div>
+
+            <!-- Campo de Fecha de Nacimiento-->
+            <div class="mb-3">
+              <label class="form-label">Fecha de Nacimiento</label>
+              <input
+                type="date"
+                [(ngModel)]="usuario.fechaNacimiento"
+                name="fechaNacimiento"
+                class="form-control"
+                required
+                [max]="maxDate"
+              />
+            </div>
+
+            <!-- Otros campos de usuario -->
+            <div class="modal-footer">
+              <button type="submit" class="btn btn-primary">
+                {{ editMode ? "Actualizar" : "Crear" }}
+              </button>
+              <button
+                type="button"
+                class="btn btn-secondary"
+                (click)="closeModal()"
+              >
+                Cerrar
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
