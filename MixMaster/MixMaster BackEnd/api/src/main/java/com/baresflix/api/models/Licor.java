@@ -20,8 +20,10 @@ public class Licor {
     private String nombreLicor;
 
     @Column(length = 50)
-    private String tipo;
+    private String descripcion;
 
+    @Column(length = 50)
+    private String tipo;
 /*    @OneToMany(mappedBy = "licor")
     private List<Preferencias> preferencias;
 

@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="ea3f178a-5f9d-4359-a338-57536c03a31e" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/../ApiV2/src/main/java/com/baresflix/api/DTO/CoctelDTO.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../ApiV2/src/main/java/com/baresflix/api/DTO/CoctelIngredienteDTO.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../ApiV2/src/main/java/com/baresflix/api/DTO/GenericResponse.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../ApiV2/src/main/java/com/baresflix/api/DTO/IngredienteDTO.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../ApiV2/src/main/java/com/baresflix/api/DTO/LicorDTO.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../ApiV2/src/main/java/com/baresflix/api/DTO/LicorIngredienteDTO.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../ApiV2/src/main/java/com/baresflix/api/DTO/PreferenciasDTO.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../ApiV2/src/main/java/com/baresflix/api/DTO/UsuarioDTO.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../ApiV2/src/main/java/com/baresflix/api/controllers/UsuarioController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../ApiV2/src/main/java/com/baresflix/api/exceptions/CoctelException.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../ApiV2/src/main/java/com/baresflix/api/exceptions/CoctelIngredienteException.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../ApiV2/src/main/java/com/baresflix/api/exceptions/IngredienteException.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../ApiV2/src/main/java/com/baresflix/api/exceptions/JwtResponseException.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../ApiV2/src/main/java/com/baresflix/api/exceptions/LicorException.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../ApiV2/src/main/java/com/baresflix/api/exceptions/LicorIngredienteException.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../ApiV2/src/main/java/com/baresflix/api/exceptions/PreferenciasException.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../ApiV2/src/main/java/com/baresflix/api/exceptions/RestExceptionHandler.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../ApiV2/src/main/java/com/baresflix/api/exceptions/UsuarioException.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../ApiV2/src/main/java/com/baresflix/api/mappers/CoctelIngredienteMapper.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../ApiV2/src/main/java/com/baresflix/api/mappers/CoctelMapper.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../ApiV2/src/main/java/com/baresflix/api/mappers/IngredienteMapper.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../ApiV2/src/main/java/com/baresflix/api/mappers/LicorIngredienteMapper.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../ApiV2/src/main/java/com/baresflix/api/mappers/LicorMapper.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../ApiV2/src/main/java/com/baresflix/api/mappers/PreferenciasMapper.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../ApiV2/src/main/java/com/baresflix/api/mappers/UsuarioMapper.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../ApiV2/src/main/java/com/baresflix/api/models/Coctel.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../ApiV2/src/main/java/com/baresflix/api/models/CoctelIngrediente.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../ApiV2/src/main/java/com/baresflix/api/models/Ingrediente.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../ApiV2/src/main/java/com/baresflix/api/models/Licor.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../ApiV2/src/main/java/com/baresflix/api/models/LicorIngrediente.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../ApiV2/src/main/java/com/baresflix/api/models/Preferencias.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../ApiV2/src/main/java/com/baresflix/api/models/Usuario.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../ApiV2/src/main/java/com/baresflix/api/models/Valoraciones.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../ApiV2/src/main/java/com/baresflix/api/repository/ICoctelIngredienteRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../ApiV2/src/main/java/com/baresflix/api/repository/ICoctelRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../ApiV2/src/main/java/com/baresflix/api/repository/IIngredienteRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../ApiV2/src/main/java/com/baresflix/api/repository/ILicorIngredienteRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../ApiV2/src/main/java/com/baresflix/api/repository/ILicorRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../ApiV2/src/main/java/com/baresflix/api/repository/IPreferenciasRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../ApiV2/src/main/java/com/baresflix/api/repository/IUsuarioRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../ApiV2/src/main/java/com/baresflix/api/security/ApplicationConfig.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../ApiV2/src/main/java/com/baresflix/api/security/JWTAuthenticationFilter.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../ApiV2/src/main/java/com/baresflix/api/security/TokenUtils.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../ApiV2/src/main/java/com/baresflix/api/security/WebSecurityConfig.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../ApiV2/src/main/java/com/baresflix/api/services/UsuarioService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../MixMaster FrontEnd" beforeDir="false" afterPath="$PROJECT_DIR$/../../MixMaster FrontEnd" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Class" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/../../.." />
+  </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;BNAV01&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/BNAV01/MixMaster.git&quot;,
+    &quot;accountId&quot;: &quot;697dee36-12d3-4744-be7f-941374fe08c9&quot;
+  }
+}</component>
+  <component name="JpbToolWindowState">
+    <option name="isToolWindowVisible" value="false" />
+  </component>
+  <component name="MavenImportPreferences">
+    <option name="generalSettings">
+      <MavenGeneralSettings>
+        <option name="mavenHomeTypeForPersistence" value="WRAPPER" />
+      </MavenGeneralSettings>
+    </option>
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 0
+}</component>
+  <component name="ProjectId" id="2nRD8TseIFuz3DVpDafIaWg2vCJ" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RequestMappingsPanelOrder0": "0",
+    "RequestMappingsPanelOrder1": "1",
+    "RequestMappingsPanelWidth0": "75",
+    "RequestMappingsPanelWidth1": "75",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "Spring Boot.ProyetoIngenieriaDeRecomendacionesApplication.executor": "Run",
+    "git-widget-placeholder": "main",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "/home/benja/Desktop/Codigos/PROYECTO SISTEMA DE RECOMENDACIONES/MixMaster/MixMaster BackEnd/ApiV2",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "project.structure.last.edited": "Project",
+    "project.structure.proportion": "0.0",
+    "project.structure.side.proportion": "0.0",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-jdk-9823dce3aa75-28b599e66164-intellij.indexing.shared.core-IU-242.23726.103" />
+        <option value="bundled-js-predefined-d6986cc7102b-5c90d61e3bab-JavaScript-IU-242.23726.103" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="ea3f178a-5f9d-4359-a338-57536c03a31e" name="Changes" comment="" />
+      <created>1728926836036</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1728926836036</updated>
+      <workItem from="1728926837045" duration="1750000" />
+      <workItem from="1728938641874" duration="3049000" />
+      <workItem from="1728953047827" duration="1516000" />
+      <workItem from="1729003759669" duration="1890000" />
+      <workItem from="1729008895556" duration="1551000" />
+      <workItem from="1729010885226" duration="7142000" />
+      <workItem from="1729101330707" duration="3688000" />
+      <workItem from="1729107497357" duration="1829000" />
+      <workItem from="1729109901623" duration="50000" />
+      <workItem from="1729110028882" duration="17000" />
+      <workItem from="1729110149998" duration="4627000" />
+      <workItem from="1729162746677" duration="325000" />
+      <workItem from="1729164929092" duration="7100000" />
+      <workItem from="1729209212427" duration="1594000" />
+      <workItem from="1729211517325" duration="375000" />
+      <workItem from="1729212803594" duration="2873000" />
+      <workItem from="1729216646503" duration="618000" />
+      <workItem from="1729260773098" duration="4252000" />
+      <workItem from="1729296482103" duration="6578000" />
+      <workItem from="1729545179524" duration="36000" />
+      <workItem from="1729545281469" duration="225000" />
+      <workItem from="1729643328238" duration="4594000" />
+      <workItem from="1729653691537" duration="92000" />
+      <workItem from="1729653811731" duration="1435000" />
+      <workItem from="1729699600497" duration="601000" />
+      <workItem from="1729861908145" duration="1058000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+</project>

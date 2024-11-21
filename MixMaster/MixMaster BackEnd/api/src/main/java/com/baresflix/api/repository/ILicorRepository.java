@@ -15,5 +15,4 @@ public interface ILicorRepository extends JpaRepository<Licor, Integer> {
     List<Licor> findAllByIdLicorIn(List<Integer> ids);
     List<Licor> findAllByNombreLicorContaining(String nombre);
     List<Licor> findAllByTipo(String tipo);
-
 }

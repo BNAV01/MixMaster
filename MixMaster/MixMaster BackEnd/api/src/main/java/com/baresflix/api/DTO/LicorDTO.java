@@ -8,6 +8,7 @@ import lombok.Data;
 public class LicorDTO {
     private int idLicor;
     private String nombreLicor;
+    private String descripcion;
     private String tipo;
 /*    private List<PreferenciasDTO> preferenciasDTO;
     private List<CoctelIngredienteDTO> coctelIngredienteDTO;

@@ -10,6 +10,7 @@ public class LicorMapper {
         return LicorDTO.builder()
                 .idLicor(licor.getIdLicor())
                 .nombreLicor(licor.getNombreLicor())
+                .descripcion(licor.getDescripcion())
                 .tipo(licor.getTipo())
 /*
                 .preferenciasDTO(licor.getPreferencias().stream().map(PreferenciasMapper::createDTO).toList())
