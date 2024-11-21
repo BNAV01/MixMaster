@@ -1,9 +1,0 @@
-com/baresflix/api/DTO/GenericResponse.class
-com/baresflix/api/DTO/LicorDTO.class
-com/baresflix/api/DTO/PreferenciasDTO.class
-com/baresflix/api/ProyetoIngenieriaDeRecomendacionesApplication.class
-com/baresflix/api/DTO/IngredienteDTO.class
-com/baresflix/api/DTO/UsuarioDTO.class
-com/baresflix/api/DTO/CoctelDTO.class
-com/baresflix/api/DTO/CoctelIngredienteDTO.class
-com/baresflix/api/DTO/LicorIngredienteDTO.class
