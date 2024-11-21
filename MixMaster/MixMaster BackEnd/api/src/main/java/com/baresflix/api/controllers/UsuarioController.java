@@ -1,11 +1,8 @@
 package com.baresflix.api.controllers;
 
-import com.baresflix.api.models.Usuario;
-import com.baresflix.api.exceptions.UsuarioException;
 import com.baresflix.api.DTO.UsuarioDTO;
-
+import com.baresflix.api.exceptions.UsuarioException;
 import lombok.AllArgsConstructor;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

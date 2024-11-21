@@ -3,21 +3,18 @@ package com.baresflix.api.services;
 import com.baresflix.api.DTO.GenericResponse;
 import com.baresflix.api.DTO.UsuarioDTO;
 import com.baresflix.api.exceptions.UsuarioException;
-import com.baresflix.api.models.Usuario;
 import com.baresflix.api.mappers.UsuarioMapper;
-
+import com.baresflix.api.models.Usuario;
 import com.baresflix.api.repository.IPreferenciasRepository;
 import com.baresflix.api.repository.IUsuarioRepository;
-
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.text.MessageFormat;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.*;
-
-import java.util.stream.Collectors;
+import java.util.Optional;
 
 
 @Service

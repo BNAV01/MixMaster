@@ -1,9 +1,9 @@
 package com.baresflix.api.mappers;
 
 
-import org.springframework.stereotype.Component;
-import com.baresflix.api.models.Preferencias;
 import com.baresflix.api.DTO.PreferenciasDTO;
+import com.baresflix.api.models.Preferencias;
+import org.springframework.stereotype.Component;
 
 
 

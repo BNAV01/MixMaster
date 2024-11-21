@@ -1,7 +1,7 @@
 package com.baresflix.api.mappers;
 
-import com.baresflix.api.models.LicorIngrediente;
 import com.baresflix.api.DTO.LicorIngredienteDTO;
+import com.baresflix.api.models.LicorIngrediente;
 import org.springframework.stereotype.Component;
 
 @Component

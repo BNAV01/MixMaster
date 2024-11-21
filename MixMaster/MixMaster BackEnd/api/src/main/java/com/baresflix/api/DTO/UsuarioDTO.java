@@ -1,7 +1,9 @@
 package com.baresflix.api.DTO;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Data;
+
 import java.util.Date;
 import java.util.List;
 

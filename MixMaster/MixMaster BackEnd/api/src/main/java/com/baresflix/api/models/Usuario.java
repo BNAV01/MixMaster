@@ -1,15 +1,12 @@
 package com.baresflix.api.models;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-import lombok.*;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-import jakarta.persistence.*;
+import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-
-import java.time.LocalDate;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;

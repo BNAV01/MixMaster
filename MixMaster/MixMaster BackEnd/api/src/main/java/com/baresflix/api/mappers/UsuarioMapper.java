@@ -1,9 +1,9 @@
 package com.baresflix.api.mappers;
 
 
-import org.springframework.stereotype.Component;
-import com.baresflix.api.models.Usuario;
 import com.baresflix.api.DTO.UsuarioDTO;
+import com.baresflix.api.models.Usuario;
+import org.springframework.stereotype.Component;
 @Component
 public class UsuarioMapper {
     public static UsuarioDTO createDTO(Usuario usuario) {

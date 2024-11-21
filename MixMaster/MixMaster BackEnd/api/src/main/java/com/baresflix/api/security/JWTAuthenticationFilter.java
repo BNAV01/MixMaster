@@ -1,6 +1,5 @@
 package com.baresflix.api.security;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.baresflix.api.exceptions.JwtResponseException;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
@@ -15,7 +14,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Collections;
 
 
 //Interceptor que se ejecuta antes de cada peticion
