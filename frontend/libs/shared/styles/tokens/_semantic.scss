@@ -1,0 +1,17 @@
+@mixin install-semantic-tokens() {
+  :root {
+    --mm-color-background: 15 19 28;
+    --mm-color-surface: 23 28 41;
+    --mm-color-surface-2: 29 36 51;
+    --mm-color-surface-3: 35 43 61;
+    --mm-color-border: 99 114 138;
+    --mm-color-text: 239 243 251;
+    --mm-color-text-muted: 148 161 183;
+    --mm-color-accent: 209 164 102;
+    --mm-color-accent-2: 121 198 187;
+    --mm-color-success: 92 201 151;
+    --mm-color-warning: 240 189 86;
+    --mm-color-danger: 240 108 108;
+    --mm-color-info: 122 164 255;
+  }
+}

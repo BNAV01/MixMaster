@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "experimentalDecorators": true,
+    "importHelpers": true,
+    "target": "ES2022",
+    "module": "preserve",
+    "baseUrl": ".",
+    "paths": {
+      "@mixmaster/shared/*": [
+        "libs/shared/*/src/index.ts"
+      ],
+      "@mixmaster/consumer/*": [
+        "libs/consumer/*/src/index.ts"
+      ],
+      "@mixmaster/tenant/*": [
+        "libs/tenant/*/src/index.ts"
+      ],
+      "@mixmaster/platform/*": [
+        "libs/platform/*/src/index.ts"
+      ]
+    }
+  }
+}

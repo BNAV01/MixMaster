@@ -99,6 +99,7 @@ public class RequestRateLimitFilter extends OncePerRequestFilter {
         if (forwarded != null && !forwarded.isBlank()) {
             return forwarded.split(",")[0].trim() + "|" + request.getRequestURI();
         }
+
         return request.getRemoteAddr() + "|" + request.getRequestURI();
     }
 

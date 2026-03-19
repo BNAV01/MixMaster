@@ -8,3 +8,4 @@
 - operación separada de edición estructural
 - paneles que ayuden a decidir, no solo a mirar
 
+El blueprint UX completo de consumidor y paneles internos vive en `product-experience-blueprint.md`.

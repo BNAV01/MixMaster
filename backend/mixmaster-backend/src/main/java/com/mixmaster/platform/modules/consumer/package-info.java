@@ -1,4 +1,4 @@
 /**
- * Consumer account, anonymous profile and session module boundaries.
+ * Consumer accounts, anonymous profiles, sessions and preferences.
  */
 package com.mixmaster.platform.modules.consumer;

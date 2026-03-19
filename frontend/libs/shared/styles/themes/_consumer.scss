@@ -1,0 +1,24 @@
+@mixin apply-consumer-theme() {
+  :root {
+    --mm-color-background: 12 16 24;
+    --mm-color-surface: 20 25 37;
+    --mm-color-surface-2: 26 32 45;
+    --mm-color-surface-3: 34 42 58;
+    --mm-color-border: 78 89 110;
+    --mm-color-text: 243 246 252;
+    --mm-color-text-muted: 154 166 187;
+    --mm-color-accent: 220 171 99;
+    --mm-color-accent-2: 110 211 193;
+    --mm-color-success: 92 201 151;
+    --mm-color-warning: 244 191 92;
+    --mm-color-danger: 241 106 106;
+    --mm-color-info: 131 163 255;
+  }
+
+  body {
+    background:
+      radial-gradient(circle at top left, rgba(220, 171, 99, 0.16), transparent 32%),
+      radial-gradient(circle at top right, rgba(110, 211, 193, 0.12), transparent 30%),
+      linear-gradient(180deg, rgb(12 16 24) 0%, rgb(9 12 19) 100%);
+  }
+}

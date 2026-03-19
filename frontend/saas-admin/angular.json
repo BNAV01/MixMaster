@@ -29,6 +29,11 @@
                 "input": "public"
               }
             ],
+            "stylePreprocessorOptions": {
+              "includePaths": [
+                "../libs/shared/styles"
+              ]
+            },
             "styles": [
               "src/styles.scss"
             ]

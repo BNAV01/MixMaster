@@ -8,6 +8,10 @@
 - `database`: relacional, shared-schema con `tenant_id`.
 - `integración`: eventos internos y evolución futura a conectores externos, sin microservicios de entrada.
 
+El detalle técnico del backend, módulos, eventos, seguridad, multitenancy y roadmap operativo está desarrollado en `backend-platform-architecture.md`.
+La normalización concreta de paquetes, propiedades, seguridad heredada y fundación compilable está desarrollada en `backend-foundation-conventions.md`.
+El blueprint de frontend Angular por apps, módulos, rutas, estado y theming está desarrollado en `frontend-application-architecture.md`.
+
 ## Backend
 
 El backend se organiza bajo `com.mixmaster.platform` y usa una combinación de:

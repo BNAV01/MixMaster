@@ -1,59 +1,37 @@
-# ConsumerWeb
+# Consumer Web
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.2.2.
+Experiencia pública mobile-first del producto MixMaster.
 
-## Development server
+## Alcance
 
-To start a local development server, run:
+- entrada por QR
+- sesión anónima
+- recomendaciones y exploración
+- feedback
+- login, registro, favoritos, historial y beneficios
+- preparada para SSR
 
-```bash
-ng serve
-```
-
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
-
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+## Ejecución local
 
 ```bash
-ng generate component component-name
+cd ..
+npm install
+cd consumer-web
+npm install
+npm start
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+Puerto por defecto: `4200`
+
+## Scripts útiles
 
 ```bash
-ng generate --help
+npm run build
+npm run test
+npm run serve:ssr:consumer-web
 ```
 
-## Building
+## Nota de estructura
 
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+Las pantallas viven en `src/app/features/*` y consumen base compartida desde `../libs/`.
+Antes de `start`, `build`, `watch` o `test`, la app relinka automaticamente `@angular`, `rxjs` y `tslib` al workspace compartido.

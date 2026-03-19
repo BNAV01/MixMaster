@@ -25,21 +25,29 @@ public class PlatformStatusService {
             ? List.of(environment.getDefaultProfiles())
             : Arrays.asList(activeProfiles);
 
-        String securityMode = applicationProperties.getSecurity().getBootstrap().isEnabled()
-            ? "bootstrap-basic-auth"
-            : "prepared-for-db-backed-auth";
-
         return new PlatformStatusSnapshot(
             audience,
             "mixmaster-backend",
             "modular-monolith",
             "shared-schema",
-            securityMode,
+            resolveSecurityMode(),
             profiles,
             applicationProperties.getTenant().getHeaderName(),
             applicationProperties.getTenant().getBrandHeaderName(),
             applicationProperties.getTenant().getBranchHeaderName(),
             OffsetDateTime.now()
         );
+    }
+
+    private String resolveSecurityMode() {
+        if (applicationProperties.getSecurity().getToken().isEnabled()) {
+            return "token-prepared";
+        }
+
+        if (applicationProperties.getSecurity().getBootstrap().isEnabled()) {
+            return "bootstrap-basic-auth";
+        }
+
+        return "prepared-for-db-backed-auth";
     }
 }

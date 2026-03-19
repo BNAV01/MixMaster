@@ -1,0 +1,26 @@
+@use '../base/reset' as reset;
+@use '../base/typography' as typography;
+@use '../components/states' as states;
+@use '../layout/shell' as shell;
+@use '../themes/consumer' as consumer-theme;
+@use '../themes/saas-admin' as saas-theme;
+@use '../themes/tenant-console' as tenant-theme;
+@use '../tokens/core' as core;
+@use '../tokens/semantic' as semantic;
+
+@mixin install-app-theme($theme) {
+  @include core.install-core-tokens();
+  @include semantic.install-semantic-tokens();
+  @include reset.install-reset();
+  @include typography.install-typography();
+  @include shell.install-shell-layout();
+  @include states.install-component-foundations();
+
+  @if $theme == consumer {
+    @include consumer-theme.apply-consumer-theme();
+  } @else if $theme == tenant-console {
+    @include tenant-theme.apply-tenant-console-theme();
+  } @else if $theme == saas-admin {
+    @include saas-theme.apply-saas-admin-theme();
+  }
+}

@@ -1,5 +1,7 @@
 # Modelo de Datos Inicial
 
+Este documento queda como resumen ejecutivo del modelo. El blueprint relacional detallado vive en `relational-data-model.md`.
+
 ## Dominios principales
 
 - organización SaaS: tenant, brand, branch, table, qr
@@ -18,4 +20,4 @@
 - historial separado del estado actual
 - ventas y eventos son append-only
 - menú publicado se trata como snapshot auditable
-
+- el detalle de entidades, campos, índices, restricciones y estrategias analíticas está en `relational-data-model.md`

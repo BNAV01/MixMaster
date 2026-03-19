@@ -41,9 +41,29 @@ public class SecurityConfig {
         ApplicationProperties.Security.Bootstrap bootstrap = applicationProperties.getSecurity().getBootstrap();
 
         if (bootstrap.isEnabled()) {
-            registerBootstrapUser(manager, passwordEncoder, bootstrap.getConsumerUsername(), bootstrap.getConsumerPassword(), "CONSUMER");
-            registerBootstrapUser(manager, passwordEncoder, bootstrap.getTenantUsername(), bootstrap.getTenantPassword(), "TENANT_ADMIN", "TENANT_STAFF");
-            registerBootstrapUser(manager, passwordEncoder, bootstrap.getPlatformUsername(), bootstrap.getPlatformPassword(), "PLATFORM_ADMIN", "PLATFORM_SUPPORT");
+            registerBootstrapUser(
+                manager,
+                passwordEncoder,
+                bootstrap.getConsumerUsername(),
+                bootstrap.getConsumerPassword(),
+                "CONSUMER"
+            );
+            registerBootstrapUser(
+                manager,
+                passwordEncoder,
+                bootstrap.getTenantUsername(),
+                bootstrap.getTenantPassword(),
+                "TENANT_ADMIN",
+                "TENANT_STAFF"
+            );
+            registerBootstrapUser(
+                manager,
+                passwordEncoder,
+                bootstrap.getPlatformUsername(),
+                bootstrap.getPlatformPassword(),
+                "PLATFORM_ADMIN",
+                "PLATFORM_SUPPORT"
+            );
         }
 
         return manager;
@@ -82,14 +102,13 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers("/actuator/health", "/actuator/info", "/error").permitAll()
                 .requestMatchers(ConsumerWebApiPaths.PUBLIC_BASE_PATH + "/**").permitAll()
+                .requestMatchers(ConsumerWebApiPaths.ACCOUNT_BASE_PATH + "/**").hasRole("CONSUMER")
                 .requestMatchers(TenantConsoleApiPaths.PUBLIC_BASE_PATH + "/**").permitAll()
                 .requestMatchers(SaasAdminApiPaths.PUBLIC_BASE_PATH + "/**").permitAll()
-                .requestMatchers(ConsumerWebApiPaths.ROOT + "/**").permitAll()
                 .requestMatchers(TenantConsoleApiPaths.ROOT + "/**").hasAnyRole("TENANT_ADMIN", "TENANT_STAFF")
                 .requestMatchers(SaasAdminApiPaths.ROOT + "/**").hasAnyRole("PLATFORM_ADMIN", "PLATFORM_SUPPORT")
-                .anyRequest().denyAll());
-
-        http
+                .anyRequest().denyAll()
+            )
             .addFilterBefore(maliciousRequestFilter, BasicAuthenticationFilter.class)
             .addFilterBefore(requestRateLimitFilter, BasicAuthenticationFilter.class)
             .addFilterAfter(tenantContextFilter, RequestRateLimitFilter.class);

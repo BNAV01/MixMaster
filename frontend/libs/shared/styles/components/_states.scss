@@ -1,0 +1,27 @@
+@mixin install-component-foundations() {
+  @layer components {
+    .mm-chip {
+      @apply inline-flex items-center gap-2 rounded-pill border border-border/20 bg-surface-2/70 px-3 py-1.5 text-sm text-muted transition duration-240 ease-expressive;
+    }
+
+    .mm-button {
+      @apply inline-flex items-center justify-center gap-2 rounded-pill px-4 py-2.5 text-sm font-medium transition duration-240 ease-expressive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60;
+    }
+
+    .mm-button-primary {
+      @apply mm-button bg-accent text-slate-950 hover:bg-accent/90;
+    }
+
+    .mm-button-secondary {
+      @apply mm-button border border-border/25 bg-surface-2/80 text-text hover:bg-surface-3/90;
+    }
+
+    .mm-card-grid {
+      @apply grid gap-4 sm:grid-cols-2 xl:grid-cols-3;
+    }
+
+    .mm-empty-state {
+      @apply flex min-h-60 flex-col items-center justify-center rounded-xl border border-dashed border-border/30 bg-surface/60 p-6 text-center;
+    }
+  }
+}

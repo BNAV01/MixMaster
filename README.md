@@ -88,8 +88,14 @@ npm start
 - [Módulos del producto](documents/product/modules.md)
 - [Roadmap técnico inicial](documents/product/roadmap-initial.md)
 - [Arquitectura inicial](documents/architecture/initial-architecture.md)
+- [Arquitectura backend y general](documents/architecture/backend-platform-architecture.md)
+- [Convenciones de fundación backend](documents/architecture/backend-foundation-conventions.md)
+- [Arquitectura frontend de aplicación](documents/architecture/frontend-application-architecture.md)
 - [Modelo de datos inicial](documents/database/initial-data-model.md)
+- [Modelo relacional detallado](documents/database/relational-data-model.md)
+- [Blueprint de experiencia de producto](documents/ux/product-experience-blueprint.md)
 - [Convenciones de API](documents/api/conventions.md)
+- [API de alto nivel](documents/api/high-level-api.md)
 
 ## Convenciones oficiales de esta base
 

@@ -1,19 +1,7 @@
-@use '../../libs/shared/styles/tokens';
+@use 'index' as mixmaster;
 
-:root {
-  color-scheme: dark;
-  --color-bg: #0e1117;
-  --color-surface: rgba(20, 24, 33, 0.92);
-  --color-surface-strong: #171c25;
-  --color-text: #f5f7fb;
-  --color-text-muted: #a8b2c3;
-  --color-accent: #d9a75f;
-  --color-accent-alt: #7bc4b8;
-}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-body {
-  background:
-    radial-gradient(circle at top left, rgba(217, 167, 95, 0.18), transparent 30%),
-    radial-gradient(circle at top right, rgba(123, 196, 184, 0.12), transparent 28%),
-    var(--color-bg);
-}
+@include mixmaster.install-app-theme(consumer);

@@ -1,0 +1,338 @@
+Quiero que continúes el trabajo sobre la estructura actual del repositorio, usando como base el directorio raíz del repo.
+
+Estado actual real del proyecto
+
+No debes crear una carpeta /MixMaster_v2.
+No debes mover todo a otra carpeta contenedora.
+El directorio raíz actual del repositorio ya es la base oficial del proyecto.
+
+La estructura actual parte desde la raíz del repo y ya contiene al menos:
+
+1. /backend
+   - aquí ya descomprimí el proyecto Spring Boot generado desde Spring Initializr
+   - no debes volver a crear otro backend desde cero
+   - debes inspeccionar lo existente, ordenarlo y extenderlo
+
+2. /frontend
+   - aquí ya generé las 3 apps Angular base
+   - consumer-web
+   - tenant-console
+   - saas-admin
+   - no debes volver a crear estas apps
+   - debes inspeccionar lo existente, ordenarlo y extenderlo
+
+3. /documents
+   - esta carpeta existe y debe aprovecharse para documentación funcional, técnica o de producto, salvo que propongas una reorganización mejor y coherente
+
+4. /images
+   - esta carpeta existe y debe respetarse
+
+5. ya existen también:
+   - .git
+   - README.md
+   - LICENSE
+
+Importante
+
+Tu trabajo ahora no es reinicializar la base ni crear una carpeta contenedora nueva.
+Tu trabajo es tomar la raíz actual del repositorio y transformarla en una fundación profesional, ordenada y coherente con toda la definición previa del producto.
+
+Contexto importante
+
+Ya te entregué 5 prompts base y sus respectivas respuestas sobre:
+1. Negocio y producto
+2. BackenNo debes crear una carpeta /MixMaster_v2.d y arquitectura
+3. Base de datos
+4. Frontend
+5. UX
+
+Debes tomar esas definiciones como base oficial del proyecto.
+No partas improvisando otra idea distinta.
+No reduzcas el alcance.
+No lo conviertas en una demo simple.
+Debes construir la base real del sistema a partir de esa definición y sobre lo ya existente en la raíz del repo.
+
+Objetivo de este paso
+
+Quiero que trabajes sobre la estructura actual del repositorio y la conviertas en una base profesional, ordenada y escalable, lista para seguir desarrollando el sistema en iteraciones reales.
+
+Decisiones base que debes respetar
+
+1. El proyecto es una plataforma SaaS multitenant para bares, restobares y locales con barra.
+2. El producto contempla recomendación de bebidas y comida.
+3. Debe existir modo consumidor sin cuenta y modo consumidor con cuenta.
+4. Debe existir perfil anónimo o efímero con historial por sesión y posibilidad de persistencia técnica.
+5. Debe existir cuenta registrada con historial, favoritos y beneficios.
+6. La carta del local es central y debe ser viva, editable y conectada al recomendador.
+7. Debe existir borrador y versión publicada de carta.
+8. Debe existir manejo de disponibilidad en tiempo real o casi en tiempo real.
+9. Debe existir feedback del consumidor sobre la calidad de las recomendaciones.
+10. Debe existir gestión de ventas y consumo.
+11. Debe existir multitenancy desde el origen.
+12. El backend debe comenzar como monolito modular.
+13. El backend debe usar Spring Boot con Java.
+14. El frontend usa Angular.
+15. La base de datos es relacional.
+16. El enfoque es web primero.
+17. La app móvil queda preparada para una etapa posterior.
+18. No quiero microservicios de entrada.
+19. No quiero una app ficticia. Quiero una base seria de producto real.
+
+Arquitectura frontend ya decidida
+
+Debes respetar esta decisión ya tomada:
+
+1. Monorepo frontend con 3 apps Angular:
+   - consumer-web
+   - tenant-console
+   - saas-admin
+
+2. consumer-web:
+   - enfocada en experiencia pública y consumidor
+   - debe quedar preparada para SSR
+   - debe contemplar entrada por QR, sesión anónima, carta, recomendaciones, exploración, feedback, login, register, beneficios, historial y merge de historial
+
+3. tenant-console:
+   - panel administrativo del tenant
+   - incluye operación de sucursal, edición de carta, disponibilidad, campañas, analítica, loyalty, staff y settings
+   - branch-ops no es una app aparte, vive dentro de tenant-console
+
+4. saas-admin:
+   - panel de superadmin SaaS
+   - tenants, trials, planes, suscripciones, onboarding, soporte y feature flags
+
+5. No debes volver a crear estas apps.
+6. Debes organizar su estructura interna, routing base, theming base, librerías compartidas y módulos iniciales.
+7. Solo consumer-web debe quedar preparada para SSR.
+8. tenant-console y saas-admin quedan como SPA por ahora.
+
+Arquitectura backend ya decidida
+
+Debes respetar esta decisión ya tomada:
+
+1. Backend en Spring Boot, Java, monolito modular.
+2. No recrear proyecto desde cero.
+3. Debes ordenar el proyecto ya existente dentro de /backend.
+4. Debes dejar una estructura por dominios o módulos clara.
+5. Debes preparar seguridad base.
+6. Debes contemplar multitenancy shared-schema con tenant_id desde el diseño.
+7. Debes dejar Flyway o la estrategia de migraciones ya organizada si aún no quedó lista.
+8. Debes preparar el proyecto para:
+   - identidad staff
+   - cuentas consumidor
+   - perfiles anónimos
+   - sesiones
+   - carta y productos
+   - disponibilidad
+   - recomendación
+   - feedback
+   - beneficios
+   - ventas y consumo
+   - auditoría
+   - analítica
+
+Cómo debes trabajar ahora
+
+Quiero que primero hagas inventario y normalización, no reinicialización.
+
+Fase 1, inspección y normalización del estado actual
+1. Revisar qué existe hoy dentro de /backend
+2. Revisar qué existe hoy dentro de /frontend
+3. Revisar qué existe hoy dentro de /documents
+4. Detectar archivos, carpetas y configuraciones ya creadas
+5. No borrar nada importante sin justificarlo
+6. Reordenar lo necesario para que la base quede coherente
+7. Crear o completar la estructura faltante
+8. Documentar decisiones tomadas
+
+Fase 2, estructura raíz del repositorio
+Trabaja sobre la raíz actual del repo.
+No crees una carpeta contenedora nueva.
+
+Asegúrate de que la raíz quede ordenada con algo equivalente a esto, ajustándolo si corresponde:
+
+/
+  /backend
+  /frontend
+  /documents
+    /product
+    /architecture
+    /database
+    /ux
+    /api
+    /adr
+  /infra
+  /scripts
+  /images
+  /.github
+  README.md
+  LICENSE
+
+Si consideras que /documents debe evolucionar a una estructura más clara, puedes reorganizarla internamente, pero no la elimines sin justificación.
+
+Fase 3, backend sobre base existente
+Dentro de /backend debes trabajar sobre el proyecto Spring Boot ya descomprimido.
+
+Quiero que dejes lista la base del backend con:
+1. estructura modular por dominios
+2. base package consistente
+3. configuración por ambientes
+4. seguridad base preparada
+5. multitenancy contemplado desde el diseño
+6. módulos base creados aunque sea en estado inicial
+7. carpeta de migraciones organizada
+8. documentación de cómo correr el backend
+9. archivos iniciales de configuración coherentes con el proyecto
+10. esqueletos iniciales donde haga sentido, sin generar ruido innecesario
+
+No recrees el proyecto.
+Refactoriza y organiza el que ya existe.
+
+Fase 4, frontend sobre base existente
+Dentro de /frontend debes trabajar sobre las 3 apps ya creadas.
+
+Quiero que dejes lista la base del frontend con:
+1. estructura clara por apps y librerías compartidas
+2. routing base
+3. theming base
+4. componentes base reutilizables iniciales
+5. servicios y carpetas iniciales
+6. separación clara entre experiencia pública y administración
+7. documentación de cómo correr cada app
+8. base preparada para crecimiento real
+
+Debes organizar una estructura tipo:
+- apps
+- libs/shared
+- libs/consumer
+- libs/tenant
+- libs/platform
+
+Si la estructura actual no coincide, adáptala sin romper lo ya generado.
+
+Fase 5, documentación viva
+Debes crear o completar documentos iniciales dentro de /documents que dejen claro:
+1. visión del producto
+2. módulos
+3. roadmap técnico inicial
+4. decisiones de arquitectura
+5. modelo de datos inicial
+6. estrategia multitenant
+7. estrategia de menú y publicación
+8. estrategia de perfil anónimo y cuenta
+9. estrategia de recomendación
+10. estrategia de feedback
+11. estrategia de beneficios
+
+Reglas de ejecución
+
+1. No reinitialices backend ni frontend desde cero.
+2. No crees una carpeta /MixMaster_v2.
+3. Trabaja sobre la raíz actual del repo.
+4. Primero inspecciona, luego ordena, luego extiende.
+5. No me pidas que vuelva a explicar lo ya definido.
+6. Toma decisiones razonables cuando falte algo y déjalas documentadas.
+7. Si dudas entre dos enfoques, elige uno y justifícalo.
+8. Mantén nombres consistentes y profesionales.
+9. Evita generar basura o archivos redundantes.
+10. Todo lo que crees debe aportar al proyecto.
+11. Quiero una base lista para continuar trabajando de verdad.
+
+Forma de trabajo esperada
+
+Quiero que trabajes por bloques, ejecutando de verdad.
+
+En cada bloque debes:
+1. indicar qué inspeccionaste
+2. indicar qué vas a crear, mover, ajustar o completar
+3. ejecutar esos cambios
+4. mostrar resumen de archivos generados o modificados
+5. explicar decisiones tomadas
+6. proponer el siguiente bloque
+
+Prioridad inmediata
+
+Empieza ahora con este orden exacto:
+
+1. inspeccionar la estructura actual de /backend
+2. inspeccionar la estructura actual de /frontend
+3. inspeccionar la estructura actual de /documents
+4. resumir estado actual real del repositorio
+5. mejorar README.md raíz si hace falta
+6. crear o completar subcarpetas útiles dentro de /documents
+7. crear documento de arquitectura inicial
+8. crear documento de roadmap inicial
+9. reorganizar backend base sin recrearlo
+10. reorganizar frontend base sin recrearlo
+
+Resultado esperado de esta iteración
+
+Quiero terminar esta iteración con una base real del proyecto ya ordenada desde la raíz actual del repositorio, usando y mejorando las estructuras ya existentes en backend, frontend y documents, no con una explicación textual vacía.
+
+Importante
+
+Si detectas que conviene definir primero algunas convenciones oficiales, por ejemplo nombres de paquetes, nombres de librerías, convención de rutas, convención de módulos o convenciones de carpetas, defínelas y úsalas desde ya.
+
+Si necesitas elegir entre una reestructuración mínima o una reestructuración más consistente, elige la que deje mejor base a mediano plazo, pero evita romper innecesariamente lo que ya está generado.
+
+No reduzcas el alcance del producto.
+No conviertas esto en un MVP vacío.
+Quiero una fundación sólida sobre la estructura ya existente del repositorio.
+
+Empieza ya.
+
+Quiero recalcar que el backend tendras que usar una arquiectura por capas, te las dejare enlistadas
+/DTOs
+  /consumer-web
+  /saas-admin
+  /tenant-console
+/configs
+  /consumer-web
+  /saas-admin
+  /tenant-console
+/controllers
+  /consumer-web
+  /saas-admin
+  /tenant-console
+/exceptions
+  /consumer-web
+  /saas-admin
+  /tenant-console
+/mappers
+  /consumer-web
+  /saas-admin
+  /tenant-console
+/models
+  /consumer-web
+  /saas-admin
+  /tenant-console
+/repositories
+  /consumer-web
+  /saas-admin
+  /tenant-console
+/security
+  /consumer-web
+  /saas-admin
+  /tenant-console
+/services
+  /consumer-web
+  /saas-admin
+  /tenant-console
+/utils
+  /consumer-web
+  /saas-admin
+  /tenant-console
+/audit
+  /consumer-web
+  /saas-admin
+  /tenant-console
+/excels
+  /consumer-web
+  /saas-admin
+  /tenant-console
+
+Si consideras directorios innecesarios propone mejoras , sino, mantenlo tal cual.
+Cada seccion en audit va a contar con su propio model listener event service revision repository auditor aware
+Si cnsideras que puedes mejorarlo, aplicalo, sino, mantenlo.
+
+Dejare ademas unas plantillas en security que pueden ser adaptadas y reutilizadas para la ocasion, ademas de dejar un archivo de application.properties y una version dev de otro proyecto que se deberá modificar para este proyecto en particular agergando o quitando segun corresponda

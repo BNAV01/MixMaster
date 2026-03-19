@@ -1,5 +1,6 @@
 package com.mixmaster.platform.shared.config;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -77,9 +78,14 @@ public class ApplicationProperties {
 
     public static class Security {
         private final Bootstrap bootstrap = new Bootstrap();
+        private final Token token = new Token();
 
         public Bootstrap getBootstrap() {
             return bootstrap;
+        }
+
+        public Token getToken() {
+            return token;
         }
 
         public static class Bootstrap {
@@ -145,6 +151,45 @@ public class ApplicationProperties {
 
             public void setPlatformPassword(String platformPassword) {
                 this.platformPassword = platformPassword;
+            }
+        }
+
+        public static class Token {
+            private boolean enabled;
+            private String issuer = "mixmaster.local";
+            private Duration accessTtl = Duration.ofMinutes(15);
+            private Duration refreshTtl = Duration.ofDays(30);
+
+            public boolean isEnabled() {
+                return enabled;
+            }
+
+            public void setEnabled(boolean enabled) {
+                this.enabled = enabled;
+            }
+
+            public String getIssuer() {
+                return issuer;
+            }
+
+            public void setIssuer(String issuer) {
+                this.issuer = issuer;
+            }
+
+            public Duration getAccessTtl() {
+                return accessTtl;
+            }
+
+            public void setAccessTtl(Duration accessTtl) {
+                this.accessTtl = accessTtl;
+            }
+
+            public Duration getRefreshTtl() {
+                return refreshTtl;
+            }
+
+            public void setRefreshTtl(Duration refreshTtl) {
+                this.refreshTtl = refreshTtl;
             }
         }
     }

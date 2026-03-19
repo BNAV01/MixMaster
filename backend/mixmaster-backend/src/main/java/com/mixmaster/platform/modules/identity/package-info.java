@@ -1,4 +1,4 @@
 /**
- * Identity and access management module boundaries.
+ * Staff identity, roles, permissions and audience access control.
  */
 package com.mixmaster.platform.modules.identity;

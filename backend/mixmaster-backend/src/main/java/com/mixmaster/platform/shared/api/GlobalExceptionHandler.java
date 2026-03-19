@@ -1,5 +1,8 @@
 package com.mixmaster.platform.shared.api;
 
+import com.mixmaster.platform.interfaces.consumerweb.exceptions.ConsumerWebException;
+import com.mixmaster.platform.interfaces.saasadmin.exceptions.SaasAdminException;
+import com.mixmaster.platform.interfaces.tenantconsole.exceptions.TenantConsoleException;
 import java.time.OffsetDateTime;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +17,20 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiErrorResponse> handleValidation(MethodArgumentNotValidException exception) {
         return ResponseEntity.badRequest().body(new ApiErrorResponse(
             "VALIDATION_ERROR",
+            exception.getMessage(),
+            OffsetDateTime.now()
+        ));
+    }
+
+    @ExceptionHandler({
+        ConsumerWebException.class,
+        TenantConsoleException.class,
+        SaasAdminException.class,
+        IllegalArgumentException.class
+    })
+    public ResponseEntity<ApiErrorResponse> handleBadRequest(RuntimeException exception) {
+        return ResponseEntity.badRequest().body(new ApiErrorResponse(
+            "BAD_REQUEST",
             exception.getMessage(),
             OffsetDateTime.now()
         ));

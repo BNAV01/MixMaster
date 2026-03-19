@@ -34,7 +34,7 @@ public class AuditRevisionService {
         }
 
         String actor = platformAuditorAware.getCurrentAuditor().orElse("system");
-        String tenantKey = TenantContextHolder.get().map(tenant -> tenant.tenantKey()).orElse("platform");
+        String tenantKey = TenantContextHolder.get().map(tenantContext -> tenantContext.tenantKey()).orElse("platform");
         AuditRevisionEvent event = auditModelListener.onChange(module, action, actor, tenantKey, metadata);
         AuditRevision revision = auditRevisionListener.toRevision(event);
         auditRevisionRepository.save(revision);

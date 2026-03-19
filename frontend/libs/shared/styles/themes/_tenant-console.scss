@@ -1,0 +1,21 @@
+@mixin apply-tenant-console-theme() {
+  :root {
+    --mm-color-background: 14 18 27;
+    --mm-color-surface: 22 28 40;
+    --mm-color-surface-2: 27 35 50;
+    --mm-color-surface-3: 34 44 63;
+    --mm-color-border: 84 97 119;
+    --mm-color-text: 236 241 249;
+    --mm-color-text-muted: 148 160 181;
+    --mm-color-accent: 115 198 184;
+    --mm-color-accent-2: 216 170 106;
+    --mm-color-success: 84 197 146;
+    --mm-color-warning: 240 188 89;
+    --mm-color-danger: 235 108 108;
+    --mm-color-info: 139 167 255;
+  }
+
+  body {
+    background: linear-gradient(180deg, rgb(16 21 31) 0%, rgb(13 17 26) 100%);
+  }
+}
