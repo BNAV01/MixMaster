@@ -1,70 +1,102 @@
-# Sistema de Gestión de Usuarios y Recomendación
+# MixMaster Platform
 
-Este proyecto es una aplicación de gestión de usuarios y un sistema de recomendación, desarrollado con un **backend en Spring Boot (Java 23)** y un **frontend en Angular**, utilizando **Bootstrap** y **Popper Core** para el diseño de la interfaz de usuario. El backend está optimizado para ejecutar **algoritmos avanzados de recomendación** mediante la integración de un **script en Python** y permite gestionar conexiones con bases de datos en **MySQL**.
+MixMaster es una plataforma SaaS multitenant para bares, restobares y locales con barra. El producto combina carta digital viva, recomendación personalizada de bebidas y comida, perfiles anónimos y registrados, beneficios, campañas, ventas, consumo, feedback y analítica.
 
-## Características principales
+La raíz actual del repositorio es la base oficial del proyecto. No existe una carpeta contenedora nueva ni una `MixMaster_v2`.
 
-- **Gestión de usuarios**: Crear, editar, eliminar y visualizar usuarios.
-- **Sistema de recomendación**: Implementación de un algoritmo de recomendación avanzado.
-- **Frontend en Angular**: Diseño moderno con Bootstrap y Popper Core.
-- **Backend en Spring Boot**: Backend escalable y robusto para manejar grandes volúmenes de datos.
-- **Conexión a MySQL**: Integración con bases de datos relacionales.
-- **Ejecución de scripts de Python**: Algoritmos de recomendación ejecutados en el backend.
+## Estructura oficial
 
-## Tecnologías
+```text
+/
+├── backend/
+│   └── mixmaster-backend/
+├── frontend/
+│   ├── consumer-web/
+│   ├── tenant-console/
+│   └── saas-admin/
+├── documents/
+│   ├── product/
+│   ├── architecture/
+│   ├── database/
+│   ├── ux/
+│   ├── api/
+│   └── adr/
+├── infra/
+├── scripts/
+├── images/
+├── .github/
+├── README.md
+└── LICENSE
+```
+
+## Alcance del producto
+
+- `consumer-web`: experiencia pública mobile-first para QR, sesión anónima, carta, recomendaciones, exploración, feedback, login, register, beneficios, historial y merge de historial.
+- `tenant-console`: operación de sucursal, edición de carta, disponibilidad, campañas, analítica, loyalty, staff y settings.
+- `saas-admin`: tenants, trials, planes, suscripciones, onboarding, soporte y feature flags.
+- `backend`: monolito modular Spring Boot preparado para multitenancy shared-schema, seguridad base, migraciones, menú, disponibilidad, recomendación, feedback, beneficios, ventas, consumo, auditoría y analítica.
+
+## Stack base
+
+- `Backend`: Spring Boot, Java 21, Spring Security, JPA, Flyway, MySQL, Actuator, Redis, WebSocket/SSE readiness.
+- `Frontend`: Angular 21, 3 apps separadas por audiencia, SSR solo para `consumer-web`.
+- `Base de datos`: relacional, multitenant shared-schema con `tenant_id`.
+- `Documentación`: viva dentro de `documents/`.
+
+## Estado del repositorio
+
+- La base moderna del proyecto vive en `backend/` y `frontend/`.
+- El árbol `MixMaster/` se mantiene temporalmente como referencia histórica y no define la estructura oficial de esta nueva base.
+- `documents/` se usa como fuente de verdad para visión, arquitectura, datos, UX y ADRs.
+
+## Cómo correr localmente
 
 ### Backend
-- **Java 23 (Spring Boot)**
-- **MySQL** para la base de datos
-- **JPA/Hibernate** para ORM
-- **Spring Security** para la autenticación
-- **Ejecución de scripts de Python**
 
-### Frontend
-- **Angular**
-- **Bootstrap** y **Popper Core** para el diseño de la interfaz de usuario
-- **TypeScript**
+```bash
+cd backend/mixmaster-backend
+./mvnw spring-boot:run
+```
 
-## Requisitos
+### Consumer Web
 
-- **Java 23**
-- **Node.js y npm**
-- **Angular CLI**
-- **MySQL**
-- **Python 3** (para el sistema de recomendaciones)
+```bash
+cd frontend/consumer-web
+npm install
+npm start
+```
 
-## Instalación
+### Tenant Console
 
-### Backend (Spring Boot)
+```bash
+cd frontend/tenant-console
+npm install
+npm start
+```
 
-1. Clonar el repositorio:
-   ```bash
-   git clone https://github.com/usuario/proyecto-recomendaciones.git
+### SaaS Admin
 
-2. Configurar la base de datos MySQL en application.properties:
-    ```bash
-    spring.datasource.url=jdbc:mysql://localhost:3306/YOUR_DATABASE_NAME
-    spring.datasource.username=YOUR_USER
-    spring.datasource.password=YOUR_PASSWORD
+```bash
+cd frontend/saas-admin
+npm install
+npm start
+```
 
-3. Ejecutar backend: 
-    ```bash
+## Documentación inicial
 
-### Frontend (Angular)
+- [Visión de producto](documents/product/vision.md)
+- [Módulos del producto](documents/product/modules.md)
+- [Roadmap técnico inicial](documents/product/roadmap-initial.md)
+- [Arquitectura inicial](documents/architecture/initial-architecture.md)
+- [Modelo de datos inicial](documents/database/initial-data-model.md)
+- [Convenciones de API](documents/api/conventions.md)
 
-1. Navegar a la carpeta del frontend:
-    ```bash
-    cd frontend
+## Convenciones oficiales de esta base
 
-2. Instalar dependencias:
-    ```bash
-    npm install
-
-3. Ejecutar aplicación Angular:
-    ```bash
-    ng serve --open
-
-### Scripts de Python
-
-Los scripts de recomendación se ejecutarán automáticamente en el backend. Asegúrate de tener Python instalado y configurado.
-
+- No recrear backend ni frontend desde cero.
+- La estructura raíz actual es la oficial.
+- El backend evoluciona como monolito modular.
+- La capa de entrada del backend se separa por audiencia en `interfaces/consumerweb`, `interfaces/tenantconsole` y `interfaces/saasadmin`.
+- El núcleo del backend se concentra por dominio en `modules/*` y los concernes transversales en `shared/*`.
+- El frontend evoluciona como 3 apps Angular separadas por audiencia.
+- La carta es el centro del producto y siempre debe convivir con publicación, disponibilidad, recomendación y analítica.

@@ -1,0 +1,15 @@
+@use '../../libs/shared/styles/tokens';
+
+:root {
+  color-scheme: dark;
+  --color-bg: #11151d;
+  --color-surface: #171d27;
+  --color-text: #eef2f8;
+  --color-text-muted: #9aa6b8;
+  --color-accent: #7bc4b8;
+  --color-accent-alt: #cfa26b;
+}
+
+body {
+  background: linear-gradient(180deg, #141922 0%, #10141b 100%);
+}
