@@ -8,9 +8,9 @@ Thumbs.db
 *.log
 
 ## Env files
-backend/**/.env
-backend/**/.env.*
-!backend/**/.env.example
+#backend/**/.env
+#backend/**/.env.*
+#!backend/**/.env.example
 
 ## Backend
 backend/**/target/
