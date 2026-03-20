@@ -7,7 +7,6 @@ export const tenantResolver: ResolveFn<boolean> = (route) => {
   const tenantId = route.paramMap.get('tenantId');
 
   facade.loadTenants();
-  facade.loadSupportData();
 
   if (tenantId) {
     facade.loadTenantDetail(tenantId);

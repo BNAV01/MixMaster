@@ -14,6 +14,8 @@ import { AsyncStatus } from '@mixmaster/shared/models';
 import { catchError, of, take } from 'rxjs';
 import {
   DEMO_ANONYMOUS_SESSION,
+  enrichPublishedMenuWithDemo,
+  enrichRecommendationsWithDemo,
   DEMO_LOYALTY_SNAPSHOT,
   DEMO_PUBLISHED_MENU,
   DEMO_QR_CONTEXT,
@@ -44,17 +46,25 @@ export class ConsumerExperienceFacade {
   loadQrContext(qrToken: string): void {
     this.qrStatus.set('loading');
     this.consumerSessionService.startQrSession(qrToken);
+    let useRealtime = this.runtimeConfig.realtimeEnabled === true;
 
     this.publicApiClient.validateQr(qrToken).pipe(
       take(1),
-      catchError(() => of(DEMO_QR_CONTEXT))
+      catchError(() => {
+        useRealtime = false;
+        return of(DEMO_QR_CONTEXT);
+      })
     ).subscribe((context: QrContextDto) => {
       this.qrContext.set(context);
       this.qrStatus.set('success');
       this.consumerSessionService.hydrateQrContext(context);
-      this.realtimeConnectionService.connect(
-        `${this.runtimeConfig.realtimeBaseUrl}/public/availability?branchId=${context.branchId}`
-      );
+      if (useRealtime) {
+        this.realtimeConnectionService.connect(
+          `${this.runtimeConfig.realtimeBaseUrl}/public/availability?branchId=${context.branchId}`
+        );
+      } else {
+        this.realtimeConnectionService.disconnect();
+      }
     });
   }
 
@@ -78,7 +88,7 @@ export class ConsumerExperienceFacade {
       take(1),
       catchError(() => of(DEMO_PUBLISHED_MENU))
     ).subscribe((menu: PublishedMenuDto) => {
-      this.publishedMenu.set(menu);
+      this.publishedMenu.set(enrichPublishedMenuWithDemo(menu));
       this.menuStatus.set('success');
     });
   }
@@ -90,7 +100,7 @@ export class ConsumerExperienceFacade {
       take(1),
       catchError(() => of({ ...DEMO_RECOMMENDATIONS, mode }))
     ).subscribe((result: RecommendationResultDto) => {
-      this.recommendations.set(result);
+      this.recommendations.set(enrichRecommendationsWithDemo(result));
       this.recommendationsStatus.set('success');
     });
   }

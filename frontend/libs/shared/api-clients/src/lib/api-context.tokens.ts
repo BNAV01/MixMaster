@@ -1,6 +1,7 @@
 import { InjectionToken } from '@angular/core';
 
 export interface TenantContextHeaders {
+  tenantKey?: string | null;
   tenantId?: string | null;
   branchId?: string | null;
 }

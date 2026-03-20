@@ -1,14 +1,14 @@
 @mixin apply-consumer-theme() {
   :root {
-    --mm-color-background: 12 16 24;
-    --mm-color-surface: 20 25 37;
-    --mm-color-surface-2: 26 32 45;
-    --mm-color-surface-3: 34 42 58;
-    --mm-color-border: 78 89 110;
-    --mm-color-text: 243 246 252;
-    --mm-color-text-muted: 154 166 187;
-    --mm-color-accent: 220 171 99;
-    --mm-color-accent-2: 110 211 193;
+    --mm-color-background: 11 8 16;
+    --mm-color-surface: 24 17 30;
+    --mm-color-surface-2: 33 22 38;
+    --mm-color-surface-3: 50 30 47;
+    --mm-color-border: 133 104 123;
+    --mm-color-text: 247 241 234;
+    --mm-color-text-muted: 183 168 178;
+    --mm-color-accent: 217 170 95;
+    --mm-color-accent-2: 91 205 188;
     --mm-color-success: 92 201 151;
     --mm-color-warning: 244 191 92;
     --mm-color-danger: 241 106 106;
@@ -16,9 +16,33 @@
   }
 
   body {
+    position: relative;
     background:
-      radial-gradient(circle at top left, rgba(220, 171, 99, 0.16), transparent 32%),
-      radial-gradient(circle at top right, rgba(110, 211, 193, 0.12), transparent 30%),
-      linear-gradient(180deg, rgb(12 16 24) 0%, rgb(9 12 19) 100%);
+      radial-gradient(circle at 14% 18%, rgba(217, 170, 95, 0.12), transparent 26%),
+      radial-gradient(circle at 82% 12%, rgba(91, 205, 188, 0.11), transparent 24%),
+      radial-gradient(circle at 50% 0%, rgba(143, 41, 73, 0.16), transparent 32%),
+      linear-gradient(180deg, rgb(11 8 16) 0%, rgb(14 9 17) 42%, rgb(8 8 13) 100%);
+    background-attachment: fixed;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background:
+      linear-gradient(115deg, rgba(255, 255, 255, 0.02) 0%, transparent 32%),
+      linear-gradient(300deg, rgba(255, 255, 255, 0.015) 0%, transparent 38%),
+      radial-gradient(circle at 50% 0%, rgba(255, 212, 142, 0.04), transparent 45%);
+    opacity: 0.85;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    inset: auto 0 0;
+    height: 18rem;
+    pointer-events: none;
+    background: linear-gradient(180deg, transparent 0%, rgba(7, 7, 11, 0.72) 100%);
   }
 }

@@ -79,6 +79,7 @@ public class ApplicationProperties {
     public static class Security {
         private final Bootstrap bootstrap = new Bootstrap();
         private final Token token = new Token();
+        private final Secrets secrets = new Secrets();
 
         public Bootstrap getBootstrap() {
             return bootstrap;
@@ -88,8 +89,13 @@ public class ApplicationProperties {
             return token;
         }
 
+        public Secrets getSecrets() {
+            return secrets;
+        }
+
         public static class Bootstrap {
             private boolean enabled;
+            private String platformFullName = "MixMaster SaaS Admin";
             private String consumerUsername = "consumer.local";
             private String consumerPassword = "change-me";
             private String tenantUsername = "tenant.local";
@@ -103,6 +109,14 @@ public class ApplicationProperties {
 
             public void setEnabled(boolean enabled) {
                 this.enabled = enabled;
+            }
+
+            public String getPlatformFullName() {
+                return platformFullName;
+            }
+
+            public void setPlatformFullName(String platformFullName) {
+                this.platformFullName = platformFullName;
             }
 
             public String getConsumerUsername() {
@@ -190,6 +204,18 @@ public class ApplicationProperties {
 
             public void setRefreshTtl(Duration refreshTtl) {
                 this.refreshTtl = refreshTtl;
+            }
+        }
+
+        public static class Secrets {
+            private String encryptionKey = "mixmaster-local-dev-encryption-key";
+
+            public String getEncryptionKey() {
+                return encryptionKey;
+            }
+
+            public void setEncryptionKey(String encryptionKey) {
+                this.encryptionKey = encryptionKey;
             }
         }
     }

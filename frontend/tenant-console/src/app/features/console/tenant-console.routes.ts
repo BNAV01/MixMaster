@@ -235,9 +235,53 @@ export const TENANT_CONSOLE_ROUTES: Routes = [
     }
   },
   {
+    path: 'branches',
+    component: TenantRoutePageComponent,
+    canActivate: [permissionGuard],
+    data: {
+      requiredPermission: 'tenant.branches.read',
+      pageId: 'branches',
+      eyebrow: 'Tenant Module',
+      title: 'Marcas y sucursales',
+      description: 'Gobierno real de estructura multi-sucursal con lectura y escritura según permisos.',
+      actions: ['Crear marca', 'Crear sucursal', 'Revisar alcance'],
+      quickLinks: [
+        { label: 'Dashboard', route: '/dashboard' },
+        { label: 'Staff', route: '/staff' }
+      ],
+      metrics: [
+        { label: 'Scope', value: 'Tenant / multi-branch' },
+        { label: 'Gobierno', value: 'Real', tone: 'accent' }
+      ]
+    }
+  },
+  {
+    path: 'support',
+    component: TenantRoutePageComponent,
+    canActivate: [permissionGuard],
+    data: {
+      requiredPermission: 'tenant.tickets.read',
+      pageId: 'support',
+      eyebrow: 'Tenant Module',
+      title: 'Soporte',
+      description: 'Tickets reales hacia SaaS Admin, seguimiento y respuestas del tenant.',
+      actions: ['Abrir ticket', 'Responder', 'Resolver'],
+      quickLinks: [
+        { label: 'Dashboard', route: '/dashboard' },
+        { label: 'Staff', route: '/staff' }
+      ],
+      metrics: [
+        { label: 'Canal', value: 'Bidireccional', tone: 'accent' },
+        { label: 'Estado', value: 'Persistente' }
+      ]
+    }
+  },
+  {
     path: 'staff',
     component: TenantRoutePageComponent,
+    canActivate: [permissionGuard],
     data: {
+      requiredPermission: 'tenant.staff.read',
       pageId: 'staff',
       eyebrow: 'Tenant Module',
       title: 'Staff y permisos',
@@ -256,7 +300,9 @@ export const TENANT_CONSOLE_ROUTES: Routes = [
   {
     path: 'settings',
     component: TenantRoutePageComponent,
+    canActivate: [permissionGuard],
     data: {
+      requiredPermission: 'tenant.settings.read',
       pageId: 'settings',
       eyebrow: 'Tenant Module',
       title: 'Settings',

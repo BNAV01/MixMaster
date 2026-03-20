@@ -35,6 +35,7 @@ export const appConfig: ApplicationConfig = {
     {
       provide: TENANT_CONTEXT_RESOLVER,
       useFactory: (tenantContextService: TenantContextService) => () => ({
+        tenantKey: tenantContextService.activeTenantKey(),
         tenantId: tenantContextService.activeTenant(),
         branchId: tenantContextService.activeBranch()
       }),

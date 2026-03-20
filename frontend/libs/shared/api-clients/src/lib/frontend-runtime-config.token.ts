@@ -7,6 +7,7 @@ export interface FrontendRuntimeConfig {
   tenantAdminApiBaseUrl: string;
   platformAdminApiBaseUrl: string;
   realtimeBaseUrl: string;
+  realtimeEnabled?: boolean;
 }
 
 export const FRONTEND_RUNTIME_CONFIG = new InjectionToken<FrontendRuntimeConfig>('FRONTEND_RUNTIME_CONFIG');

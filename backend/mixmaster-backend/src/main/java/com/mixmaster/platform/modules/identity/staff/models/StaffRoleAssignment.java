@@ -46,6 +46,10 @@ public class StaffRoleAssignment extends TenantScopedEntity {
     private Branch branch;
 
     @Enumerated(EnumType.STRING)
+    @jakarta.persistence.Column(name = "scope_type", nullable = false, length = 40)
+    private StaffAccessScopeType scopeType;
+
+    @Enumerated(EnumType.STRING)
     @jakarta.persistence.Column(name = "status", nullable = false, length = 40)
     private StaffRoleAssignmentStatus status;
 }

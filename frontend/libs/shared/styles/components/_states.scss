@@ -5,7 +5,7 @@
     }
 
     .mm-button {
-      @apply inline-flex items-center justify-center gap-2 rounded-pill px-4 py-2.5 text-sm font-medium transition duration-240 ease-expressive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60;
+      @apply inline-flex items-center justify-center gap-2 rounded-pill px-4 py-3 text-sm font-medium transition duration-240 ease-expressive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60;
     }
 
     .mm-button-primary {
@@ -17,11 +17,11 @@
     }
 
     .mm-card-grid {
-      @apply grid gap-4 sm:grid-cols-2 xl:grid-cols-3;
+      @apply grid gap-5 sm:grid-cols-2 2xl:grid-cols-3;
     }
 
     .mm-empty-state {
-      @apply flex min-h-60 flex-col items-center justify-center rounded-xl border border-dashed border-border/30 bg-surface/60 p-6 text-center;
+      @apply flex min-h-60 flex-col items-center justify-center rounded-[1.4rem] border border-dashed border-border/30 bg-surface/60 p-6 text-center;
     }
   }
 }

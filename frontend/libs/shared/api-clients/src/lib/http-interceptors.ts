@@ -46,11 +46,18 @@ export const tenantContextInterceptor: HttpInterceptorFn = (request, next) => {
   const context = resolveTenantContext();
   const headers: Record<string, string> = {};
 
+  const tenantHeaderValue = context.tenantKey ?? context.tenantId;
+
+  if (tenantHeaderValue) {
+    headers['X-Tenant-Key'] = tenantHeaderValue;
+  }
+
   if (context.tenantId) {
     headers['X-Tenant-Id'] = context.tenantId;
   }
 
   if (context.branchId) {
+    headers['X-Branch-Key'] = context.branchId;
     headers['X-Branch-Id'] = context.branchId;
   }
 
@@ -59,10 +66,33 @@ export const tenantContextInterceptor: HttpInterceptorFn = (request, next) => {
 
 export const errorNormalizationInterceptor: HttpInterceptorFn = (request, next) => next(request).pipe(
   catchError((error: HttpErrorResponse) => {
+    const defaultServerMessage = typeof error.error?.message === 'string'
+      ? error.error.message
+      : error.message ?? 'Unexpected API error.';
+    const isNetworkError = error.status === 0;
+    const kind: NormalizedApiError['kind'] = isNetworkError
+      ? 'network'
+      : error.status === 401
+        ? 'unauthorized'
+        : error.status === 403
+          ? 'forbidden'
+          : error.status === 400 || error.status === 422
+            ? 'validation'
+            : error.status >= 500
+              ? 'server'
+              : 'unexpected';
+
+    const message = isNetworkError
+      ? 'No fue posible conectar con el backend. Verifica que el servicio esté levantado y que el proxy del frontend apunte al puerto correcto.'
+      : error.status === 401 && defaultServerMessage === 'Full authentication is required to access this resource'
+        ? 'La sesión ya no es válida para este recurso. Vuelve a iniciar sesión cuando el backend esté disponible.'
+        : defaultServerMessage;
+
     const normalizedError: NormalizedApiError = {
-      code: error.error?.code ?? 'UNEXPECTED_ERROR',
-      message: error.error?.message ?? error.message ?? 'Unexpected API error.',
+      code: isNetworkError ? 'SERVICE_UNAVAILABLE' : error.error?.code ?? 'UNEXPECTED_ERROR',
+      message,
       status: error.status,
+      kind,
       details: typeof error.error === 'object' && error.error ? error.error : undefined
     };
 

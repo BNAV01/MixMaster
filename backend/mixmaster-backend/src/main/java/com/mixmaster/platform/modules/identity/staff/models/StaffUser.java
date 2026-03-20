@@ -37,9 +37,21 @@ public class StaffUser extends TenantScopedSoftDeletableEntity {
     @Column(name = "password_hash", length = 255)
     private String passwordHash;
 
+    @Column(name = "password_set_at")
+    private OffsetDateTime passwordSetAt;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 40)
     private StaffUserStatus status;
+
+    @Column(name = "failed_login_attempts", nullable = false)
+    private int failedLoginAttempts;
+
+    @Column(name = "locked_until")
+    private OffsetDateTime lockedUntil;
+
+    @Column(name = "password_reset_required", nullable = false)
+    private boolean passwordResetRequired;
 
     @Column(name = "last_login_at")
     private OffsetDateTime lastLoginAt;

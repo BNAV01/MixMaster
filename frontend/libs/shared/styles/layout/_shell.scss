@@ -1,23 +1,23 @@
 @mixin install-shell-layout() {
   @layer components {
     .mm-page-shell {
-      @apply mx-auto flex min-h-dvh w-full max-w-shell flex-col;
+      @apply mx-auto flex min-h-dvh w-full max-w-[92rem] flex-col gap-8;
     }
 
     .mm-surface {
-      @apply rounded-xl border border-border/20 bg-surface/85 shadow-panel backdrop-blur;
+      @apply relative overflow-hidden rounded-[1.6rem] border border-border/20 bg-surface/80 shadow-panel backdrop-blur-xl;
     }
 
     .mm-eyebrow {
-      @apply text-[0.7rem] font-semibold uppercase tracking-[0.24em] text-accent-2;
+      @apply text-[0.72rem] font-semibold uppercase tracking-[0.28em] text-accent-2;
     }
 
     .mm-page-title {
-      @apply font-display text-3xl leading-tight text-text sm:text-4xl;
+      @apply font-display text-4xl leading-[0.96] text-text sm:text-5xl;
     }
 
     .mm-page-copy {
-      @apply text-sm leading-6 text-muted sm:text-base;
+      @apply text-sm leading-7 text-muted sm:text-base;
     }
   }
 }

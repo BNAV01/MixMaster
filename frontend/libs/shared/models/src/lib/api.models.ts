@@ -21,6 +21,7 @@ export interface NormalizedApiError {
   code: string;
   message: string;
   status: number;
+  kind: 'network' | 'unauthorized' | 'forbidden' | 'validation' | 'server' | 'unexpected';
   details?: Record<string, unknown>;
 }
 

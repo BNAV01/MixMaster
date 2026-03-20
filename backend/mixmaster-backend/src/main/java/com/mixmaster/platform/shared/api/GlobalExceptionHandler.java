@@ -6,9 +6,13 @@ import com.mixmaster.platform.interfaces.tenantconsole.exceptions.TenantConsoleE
 import java.time.OffsetDateTime;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -32,6 +36,43 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(new ApiErrorResponse(
             "BAD_REQUEST",
             exception.getMessage(),
+            OffsetDateTime.now()
+        ));
+    }
+
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ApiErrorResponse> handleUnauthorized(BadCredentialsException exception) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ApiErrorResponse(
+            "UNAUTHORIZED",
+            exception.getMessage(),
+            OffsetDateTime.now()
+        ));
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ApiErrorResponse> handleAuthentication(AuthenticationException exception) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ApiErrorResponse(
+            "UNAUTHORIZED",
+            exception.getMessage(),
+            OffsetDateTime.now()
+        ));
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiErrorResponse> handleForbidden(AccessDeniedException exception) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ApiErrorResponse(
+            "FORBIDDEN",
+            exception.getMessage(),
+            OffsetDateTime.now()
+        ));
+    }
+
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<ApiErrorResponse> handleStatusException(ResponseStatusException exception) {
+        String message = exception.getReason() != null ? exception.getReason() : exception.getMessage();
+        return ResponseEntity.status(exception.getStatusCode()).body(new ApiErrorResponse(
+            exception.getStatusCode().toString(),
+            message,
             OffsetDateTime.now()
         ));
     }

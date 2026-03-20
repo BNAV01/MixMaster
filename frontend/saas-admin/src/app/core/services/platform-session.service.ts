@@ -1,35 +1,85 @@
 import { Injectable, computed, signal } from '@angular/core';
+import { PlatformAdminApiClient, PlatformActorDto, PlatformAuthSessionDto, PlatformLoginRequestDto } from '@mixmaster/shared/api-clients';
+import { NormalizedApiError } from '@mixmaster/shared/models';
 import { BrowserStorageService } from '@mixmaster/shared/util';
+import { Observable, catchError, finalize, map, of, shareReplay, tap } from 'rxjs';
+
+interface PersistedPlatformSession {
+  accessToken: string | null;
+  refreshToken: string | null;
+  actor: PlatformActorDto | null;
+}
 
 @Injectable({ providedIn: 'root' })
 export class PlatformSessionService {
   private readonly storageKey = 'mixmaster.platform.session';
+  private restoreRequest$: Observable<boolean> | null = null;
+  private readonly hydrated = signal(false);
 
   readonly accessToken = signal<string | null>(null);
-  readonly displayName = signal<string | null>(null);
-  readonly permissions = signal<string[]>([]);
-  readonly isAuthenticated = computed(() => !!this.accessToken());
+  readonly refreshToken = signal<string | null>(null);
+  readonly actor = signal<PlatformActorDto | null>(null);
+  readonly displayName = computed(() => this.actor()?.fullName ?? null);
+  readonly permissions = computed(() => this.actor()?.permissions ?? []);
+  readonly isAuthenticated = computed(() => !!this.accessToken() && !!this.actor());
 
-  constructor(private readonly browserStorageService: BrowserStorageService) {
-    this.restore();
+  constructor(
+    private readonly browserStorageService: BrowserStorageService,
+    private readonly platformAdminApiClient: PlatformAdminApiClient
+  ) {
+    this.restoreFromStorage();
+  }
 
-    if (!this.accessToken()) {
-      this.bootstrapDemoSession();
+  login(payload: PlatformLoginRequestDto): Observable<PlatformActorDto> {
+    return this.platformAdminApiClient.login(payload).pipe(
+      tap((session) => this.applySession(session)),
+      map((session) => session.actor)
+    );
+  }
+
+  restoreSession(): Observable<boolean> {
+    if (this.hydrated()) {
+      return of(this.isAuthenticated());
     }
+
+    if (this.restoreRequest$) {
+      return this.restoreRequest$;
+    }
+
+    if (!this.accessToken() && !this.refreshToken()) {
+      this.hydrated.set(true);
+      return of(false);
+    }
+
+    const sessionRequest$ = (this.accessToken()
+      ? this.platformAdminApiClient.getMe().pipe(
+          tap((actor) => this.actor.set(actor)),
+          map(() => true),
+          catchError((error: NormalizedApiError) => this.handleRestoreFailure(error))
+        )
+      : this.refreshOrClear()
+    ).pipe(
+      finalize(() => {
+        this.hydrated.set(true);
+        this.restoreRequest$ = null;
+      }),
+      shareReplay(1)
+    );
+
+    this.restoreRequest$ = sessionRequest$;
+    return sessionRequest$;
   }
 
-  markAuthenticated(payload: { accessToken: string; displayName: string; permissions: string[] }): void {
-    this.accessToken.set(payload.accessToken);
-    this.displayName.set(payload.displayName);
-    this.permissions.set(payload.permissions);
-    this.persist();
-  }
+  logout(): Observable<void> {
+    if (!this.accessToken()) {
+      this.clearSession();
+      return of(void 0);
+    }
 
-  logout(): void {
-    this.accessToken.set(null);
-    this.displayName.set(null);
-    this.permissions.set([]);
-    this.browserStorageService.removeLocalItem(this.storageKey);
+    return this.platformAdminApiClient.logout().pipe(
+      catchError(() => of(void 0)),
+      tap(() => this.clearSession())
+    );
   }
 
   hasPermission(requiredPermission: string | string[]): boolean {
@@ -37,21 +87,39 @@ export class PlatformSessionService {
     return requiredPermissions.every((permission) => this.permissions().includes(permission));
   }
 
-  private bootstrapDemoSession(): void {
-    this.markAuthenticated({
-      accessToken: 'platform-demo-token',
-      displayName: 'MixMaster Ops',
-      permissions: [
-        'platform.tenants.read',
-        'platform.tenants.write',
-        'platform.plans.read',
-        'platform.subscriptions.read',
-        'platform.flags.write'
-      ]
-    });
+  private refreshOrClear(): Observable<boolean> {
+    if (!this.refreshToken()) {
+      this.clearSession();
+      return of(false);
+    }
+
+    return this.platformAdminApiClient.refresh(this.refreshToken() as string).pipe(
+      tap((session) => this.applySession(session)),
+      map(() => true),
+      catchError((error: NormalizedApiError) => {
+        if (this.isRecoverableNetworkError(error)) {
+          return of(this.isAuthenticated());
+        }
+
+        this.clearSession();
+        return of(false);
+      })
+    );
   }
 
-  private restore(): void {
+  private handleRestoreFailure(error: NormalizedApiError): Observable<boolean> {
+    if (this.isRecoverableNetworkError(error)) {
+      return of(this.isAuthenticated());
+    }
+
+    return this.refreshOrClear();
+  }
+
+  private isRecoverableNetworkError(error: NormalizedApiError): boolean {
+    return error.kind === 'network' && !!this.accessToken() && !!this.actor();
+  }
+
+  private restoreFromStorage(): void {
     const rawValue = this.browserStorageService.getLocalItem(this.storageKey);
 
     if (!rawValue) {
@@ -59,22 +127,35 @@ export class PlatformSessionService {
     }
 
     try {
-      const parsedValue = JSON.parse(rawValue) as { accessToken: string; displayName: string; permissions: string[] };
-      this.markAuthenticated(parsedValue);
+      const parsedValue = JSON.parse(rawValue) as PersistedPlatformSession;
+      this.accessToken.set(parsedValue.accessToken);
+      this.refreshToken.set(parsedValue.refreshToken);
+      this.actor.set(parsedValue.actor);
     } catch {
       this.browserStorageService.removeLocalItem(this.storageKey);
     }
   }
 
-  private persist(): void {
-    if (!this.accessToken()) {
-      return;
-    }
+  private applySession(session: PlatformAuthSessionDto): void {
+    this.accessToken.set(session.accessToken);
+    this.refreshToken.set(session.refreshToken);
+    this.actor.set(session.actor);
+    this.persist();
+  }
 
+  private clearSession(): void {
+    this.accessToken.set(null);
+    this.refreshToken.set(null);
+    this.actor.set(null);
+    this.hydrated.set(true);
+    this.browserStorageService.removeLocalItem(this.storageKey);
+  }
+
+  private persist(): void {
     this.browserStorageService.setLocalItem(this.storageKey, JSON.stringify({
       accessToken: this.accessToken(),
-      displayName: this.displayName(),
-      permissions: this.permissions()
-    }));
+      refreshToken: this.refreshToken(),
+      actor: this.actor()
+    } satisfies PersistedPlatformSession));
   }
 }

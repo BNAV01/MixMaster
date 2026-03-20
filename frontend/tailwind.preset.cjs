@@ -20,8 +20,8 @@ module.exports = {
         text: semanticColor('--mm-color-text')
       },
       fontFamily: {
-        sans: ['var(--mm-font-sans)', 'Inter', 'system-ui', 'sans-serif'],
-        display: ['var(--mm-font-display)', 'Fraunces', 'serif']
+        sans: ['var(--mm-font-sans)', 'system-ui', 'sans-serif'],
+        display: ['var(--mm-font-display)', 'serif']
       },
       borderRadius: {
         sm: 'var(--mm-radius-sm)',

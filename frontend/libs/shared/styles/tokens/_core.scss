@@ -1,7 +1,7 @@
 @mixin install-core-tokens() {
   :root {
-    --mm-font-sans: 'Inter';
-    --mm-font-display: 'Fraunces';
+    --mm-font-sans: 'Outfit';
+    --mm-font-display: 'Cormorant Garamond';
 
     --mm-radius-sm: 0.625rem;
     --mm-radius-md: 0.875rem;
@@ -18,7 +18,7 @@
     --mm-space-10: 2.5rem;
     --mm-space-12: 3rem;
 
-    --mm-shadow-panel: 0 20px 45px -28px rgba(10, 15, 28, 0.68);
+    --mm-shadow-panel: 0 30px 80px -42px rgba(5, 6, 13, 0.9);
     --mm-shadow-focus: 0 0 0 3px rgba(138, 167, 255, 0.24);
 
     --mm-border-width-subtle: 1px;

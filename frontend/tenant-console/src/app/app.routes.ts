@@ -4,6 +4,10 @@ import { TenantShellComponent } from './layout/tenant-shell.component';
 
 export const routes: Routes = [
   {
+    path: 'login',
+    loadComponent: () => import('./features/auth/pages/staff-login-page.component').then((module) => module.StaffLoginPageComponent)
+  },
+  {
     path: '',
     component: TenantShellComponent,
     canActivate: [staffAuthGuard],
@@ -18,5 +22,9 @@ export const routes: Routes = [
         redirectTo: 'dashboard'
       }
     ]
+  },
+  {
+    path: '**',
+    redirectTo: 'login'
   }
 ];

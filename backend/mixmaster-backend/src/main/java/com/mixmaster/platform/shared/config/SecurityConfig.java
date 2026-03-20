@@ -3,6 +3,9 @@ package com.mixmaster.platform.shared.config;
 import com.mixmaster.platform.interfaces.consumerweb.security.ConsumerWebApiPaths;
 import com.mixmaster.platform.interfaces.saasadmin.security.SaasAdminApiPaths;
 import com.mixmaster.platform.interfaces.tenantconsole.security.TenantConsoleApiPaths;
+import com.mixmaster.platform.shared.security.ApiAccessDeniedHandler;
+import com.mixmaster.platform.shared.security.ApiAuthenticationEntryPoint;
+import com.mixmaster.platform.shared.security.BearerTokenAuthenticationFilter;
 import com.mixmaster.platform.shared.security.MaliciousRequestFilter;
 import com.mixmaster.platform.shared.security.RequestRateLimitFilter;
 import com.mixmaster.platform.shared.tenant.TenantContextFilter;
@@ -14,14 +17,11 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import org.springframework.security.web.authentication.AnonymousAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
-import org.springframework.util.StringUtils;
+import org.springframework.security.web.access.intercept.AuthorizationFilter;
 
 @Configuration
 @EnableMethodSecurity
@@ -30,43 +30,6 @@ public class SecurityConfig {
     @Bean
     PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
-    }
-
-    @Bean
-    UserDetailsService userDetailsService(
-        ApplicationProperties applicationProperties,
-        PasswordEncoder passwordEncoder
-    ) {
-        InMemoryUserDetailsManager manager = new InMemoryUserDetailsManager();
-        ApplicationProperties.Security.Bootstrap bootstrap = applicationProperties.getSecurity().getBootstrap();
-
-        if (bootstrap.isEnabled()) {
-            registerBootstrapUser(
-                manager,
-                passwordEncoder,
-                bootstrap.getConsumerUsername(),
-                bootstrap.getConsumerPassword(),
-                "CONSUMER"
-            );
-            registerBootstrapUser(
-                manager,
-                passwordEncoder,
-                bootstrap.getTenantUsername(),
-                bootstrap.getTenantPassword(),
-                "TENANT_ADMIN",
-                "TENANT_STAFF"
-            );
-            registerBootstrapUser(
-                manager,
-                passwordEncoder,
-                bootstrap.getPlatformUsername(),
-                bootstrap.getPlatformPassword(),
-                "PLATFORM_ADMIN",
-                "PLATFORM_SUPPORT"
-            );
-        }
-
-        return manager;
     }
 
     @Bean
@@ -89,47 +52,38 @@ public class SecurityConfig {
         HttpSecurity http,
         MaliciousRequestFilter maliciousRequestFilter,
         RequestRateLimitFilter requestRateLimitFilter,
-        TenantContextFilter tenantContextFilter
+        TenantContextFilter tenantContextFilter,
+        BearerTokenAuthenticationFilter bearerTokenAuthenticationFilter,
+        ApiAuthenticationEntryPoint apiAuthenticationEntryPoint,
+        ApiAccessDeniedHandler apiAccessDeniedHandler
     ) throws Exception {
         http
             .csrf(AbstractHttpConfigurer::disable)
             .cors(Customizer.withDefaults())
-            .httpBasic(Customizer.withDefaults())
+            .httpBasic(AbstractHttpConfigurer::disable)
             .formLogin(AbstractHttpConfigurer::disable)
             .logout(AbstractHttpConfigurer::disable)
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .exceptionHandling(exceptions -> exceptions
+                .authenticationEntryPoint(apiAuthenticationEntryPoint)
+                .accessDeniedHandler(apiAccessDeniedHandler)
+            )
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers("/actuator/health", "/actuator/info", "/error").permitAll()
                 .requestMatchers(ConsumerWebApiPaths.PUBLIC_BASE_PATH + "/**").permitAll()
-                .requestMatchers(ConsumerWebApiPaths.ACCOUNT_BASE_PATH + "/**").hasRole("CONSUMER")
+                .requestMatchers(ConsumerWebApiPaths.ACCOUNT_BASE_PATH + "/**").permitAll()
                 .requestMatchers(TenantConsoleApiPaths.PUBLIC_BASE_PATH + "/**").permitAll()
                 .requestMatchers(SaasAdminApiPaths.PUBLIC_BASE_PATH + "/**").permitAll()
-                .requestMatchers(TenantConsoleApiPaths.ROOT + "/**").hasAnyRole("TENANT_ADMIN", "TENANT_STAFF")
-                .requestMatchers(SaasAdminApiPaths.ROOT + "/**").hasAnyRole("PLATFORM_ADMIN", "PLATFORM_SUPPORT")
+                .requestMatchers(TenantConsoleApiPaths.ROOT + "/**").authenticated()
+                .requestMatchers(SaasAdminApiPaths.ROOT + "/**").authenticated()
                 .anyRequest().denyAll()
             )
-            .addFilterBefore(maliciousRequestFilter, BasicAuthenticationFilter.class)
-            .addFilterBefore(requestRateLimitFilter, BasicAuthenticationFilter.class)
-            .addFilterAfter(tenantContextFilter, RequestRateLimitFilter.class);
+            .addFilterBefore(maliciousRequestFilter, AuthorizationFilter.class)
+            .addFilterAfter(requestRateLimitFilter, MaliciousRequestFilter.class)
+            .addFilterAfter(tenantContextFilter, RequestRateLimitFilter.class)
+            .addFilterBefore(bearerTokenAuthenticationFilter, AnonymousAuthenticationFilter.class);
 
         return http.build();
-    }
-
-    private void registerBootstrapUser(
-        InMemoryUserDetailsManager manager,
-        PasswordEncoder passwordEncoder,
-        String username,
-        String password,
-        String... roles
-    ) {
-        if (!StringUtils.hasText(username) || !StringUtils.hasText(password)) {
-            return;
-        }
-
-        manager.createUser(User.withUsername(username)
-            .password(passwordEncoder.encode(password))
-            .roles(roles)
-            .build());
     }
 }

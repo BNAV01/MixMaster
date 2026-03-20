@@ -22,9 +22,9 @@ public class TenantContextFilter extends OncePerRequestFilter {
         HttpServletResponse response,
         FilterChain filterChain
     ) throws ServletException, IOException {
-        String tenantKey = request.getHeader(applicationProperties.getTenant().getHeaderName());
+        String tenantKey = resolveHeader(request, applicationProperties.getTenant().getHeaderName(), "X-Tenant-Id");
         String brandKey = request.getHeader(applicationProperties.getTenant().getBrandHeaderName());
-        String branchKey = request.getHeader(applicationProperties.getTenant().getBranchHeaderName());
+        String branchKey = resolveHeader(request, applicationProperties.getTenant().getBranchHeaderName(), "X-Branch-Id");
 
         try {
             if (tenantKey != null || brandKey != null || branchKey != null) {
@@ -34,5 +34,14 @@ public class TenantContextFilter extends OncePerRequestFilter {
         } finally {
             TenantContextHolder.clear();
         }
+    }
+
+    private String resolveHeader(HttpServletRequest request, String primaryHeaderName, String fallbackHeaderName) {
+        String primaryHeaderValue = request.getHeader(primaryHeaderName);
+        if (primaryHeaderValue != null) {
+            return primaryHeaderValue;
+        }
+
+        return request.getHeader(fallbackHeaderName);
     }
 }

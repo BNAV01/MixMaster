@@ -1,47 +1,91 @@
 import { Injectable, computed, signal } from '@angular/core';
+import { NormalizedApiError } from '@mixmaster/shared/models';
 import { BrowserStorageService } from '@mixmaster/shared/util';
+import { TenantAdminApiClient, TenantActorDto, TenantAuthSessionDto, TenantLoginRequestDto } from '@mixmaster/shared/api-clients';
+import { Observable, catchError, finalize, map, of, shareReplay, tap } from 'rxjs';
+
+interface PersistedStaffSession {
+  accessToken: string | null;
+  refreshToken: string | null;
+  actor: TenantActorDto | null;
+}
 
 @Injectable({ providedIn: 'root' })
 export class StaffSessionService {
   private readonly storageKey = 'mixmaster.tenant.staff-session';
+  private restoreRequest$: Observable<boolean> | null = null;
+  private readonly hydrated = signal(false);
 
   readonly accessToken = signal<string | null>(null);
-  readonly displayName = signal<string | null>(null);
-  readonly tenantId = signal<string | null>(null);
-  readonly branchId = signal<string | null>(null);
-  readonly permissions = signal<string[]>([]);
-  readonly isAuthenticated = computed(() => !!this.accessToken());
+  readonly refreshToken = signal<string | null>(null);
+  readonly actor = signal<TenantActorDto | null>(null);
+  readonly displayName = computed(() => this.actor()?.fullName ?? null);
+  readonly tenantId = computed(() => this.actor()?.tenantId ?? null);
+  readonly tenantCode = computed(() => this.actor()?.tenantCode ?? null);
+  readonly tenantName = computed(() => this.actor()?.tenantName ?? null);
+  readonly branchId = computed(() => this.actor()?.activeBranchId ?? null);
+  readonly permissions = computed(() => this.actor()?.permissions ?? []);
+  readonly roleCodes = computed(() => this.actor()?.roleCodes ?? []);
+  readonly accessibleBranches = computed(() => this.actor()?.accessibleBranches ?? []);
+  readonly isAuthenticated = computed(() => !!this.accessToken() && !!this.actor());
 
-  constructor(private readonly browserStorageService: BrowserStorageService) {
-    this.restore();
+  constructor(
+    private readonly browserStorageService: BrowserStorageService,
+    private readonly tenantAdminApiClient: TenantAdminApiClient
+  ) {
+    this.restoreFromStorage();
+  }
 
-    if (!this.accessToken()) {
-      this.bootstrapDemoSession();
+  login(payload: TenantLoginRequestDto): Observable<TenantActorDto> {
+    return this.tenantAdminApiClient.login(payload).pipe(
+      tap((session) => this.applySession(session)),
+      map((session) => session.actor)
+    );
+  }
+
+  restoreSession(): Observable<boolean> {
+    if (this.hydrated()) {
+      return of(this.isAuthenticated());
     }
+
+    if (this.restoreRequest$) {
+      return this.restoreRequest$;
+    }
+
+    if (!this.accessToken() && !this.refreshToken()) {
+      this.hydrated.set(true);
+      return of(false);
+    }
+
+    const sessionRequest$ = (this.accessToken()
+      ? this.tenantAdminApiClient.getMe().pipe(
+          tap((actor) => this.actor.set(actor)),
+          map(() => true),
+          catchError((error: NormalizedApiError) => this.handleRestoreFailure(error))
+        )
+      : this.refreshOrClear()
+    ).pipe(
+      finalize(() => {
+        this.hydrated.set(true);
+        this.restoreRequest$ = null;
+      }),
+      shareReplay(1)
+    );
+
+    this.restoreRequest$ = sessionRequest$;
+    return sessionRequest$;
   }
 
-  markAuthenticated(payload: {
-    accessToken: string;
-    displayName: string;
-    tenantId: string;
-    branchId?: string | null;
-    permissions: string[];
-  }): void {
-    this.accessToken.set(payload.accessToken);
-    this.displayName.set(payload.displayName);
-    this.tenantId.set(payload.tenantId);
-    this.branchId.set(payload.branchId ?? null);
-    this.permissions.set(payload.permissions);
-    this.persist();
-  }
+  logout(): Observable<void> {
+    if (!this.accessToken()) {
+      this.clearSession();
+      return of(void 0);
+    }
 
-  logout(): void {
-    this.accessToken.set(null);
-    this.displayName.set(null);
-    this.tenantId.set(null);
-    this.branchId.set(null);
-    this.permissions.set([]);
-    this.browserStorageService.removeLocalItem(this.storageKey);
+    return this.tenantAdminApiClient.logout().pipe(
+      catchError(() => of(void 0)),
+      tap(() => this.clearSession())
+    );
   }
 
   hasPermission(requiredPermission: string | string[]): boolean {
@@ -49,24 +93,39 @@ export class StaffSessionService {
     return requiredPermissions.every((permission) => this.permissions().includes(permission));
   }
 
-  private bootstrapDemoSession(): void {
-    this.markAuthenticated({
-      accessToken: 'tenant-demo-token',
-      displayName: 'Camila Barra',
-      tenantId: 'tenant-demo',
-      branchId: 'branch-bellavista',
-      permissions: [
-        'tenant.dashboard.read',
-        'tenant.menu.write',
-        'tenant.availability.write',
-        'tenant.analytics.read',
-        'tenant.campaigns.write',
-        'tenant.staff.read'
-      ]
-    });
+  private refreshOrClear(): Observable<boolean> {
+    if (!this.refreshToken()) {
+      this.clearSession();
+      return of(false);
+    }
+
+    return this.tenantAdminApiClient.refresh(this.refreshToken() as string).pipe(
+      tap((session) => this.applySession(session)),
+      map(() => true),
+      catchError((error: NormalizedApiError) => {
+        if (this.isRecoverableNetworkError(error)) {
+          return of(this.isAuthenticated());
+        }
+
+        this.clearSession();
+        return of(false);
+      })
+    );
   }
 
-  private restore(): void {
+  private handleRestoreFailure(error: NormalizedApiError): Observable<boolean> {
+    if (this.isRecoverableNetworkError(error)) {
+      return of(this.isAuthenticated());
+    }
+
+    return this.refreshOrClear();
+  }
+
+  private isRecoverableNetworkError(error: NormalizedApiError): boolean {
+    return error.kind === 'network' && !!this.accessToken() && !!this.actor();
+  }
+
+  private restoreFromStorage(): void {
     const rawValue = this.browserStorageService.getLocalItem(this.storageKey);
 
     if (!rawValue) {
@@ -74,31 +133,35 @@ export class StaffSessionService {
     }
 
     try {
-      const parsedValue = JSON.parse(rawValue) as {
-        accessToken: string;
-        displayName: string;
-        tenantId: string;
-        branchId?: string | null;
-        permissions: string[];
-      };
-
-      this.markAuthenticated(parsedValue);
+      const parsedValue = JSON.parse(rawValue) as PersistedStaffSession;
+      this.accessToken.set(parsedValue.accessToken);
+      this.refreshToken.set(parsedValue.refreshToken);
+      this.actor.set(parsedValue.actor);
     } catch {
       this.browserStorageService.removeLocalItem(this.storageKey);
     }
   }
 
-  private persist(): void {
-    if (!this.accessToken()) {
-      return;
-    }
+  private applySession(session: TenantAuthSessionDto): void {
+    this.accessToken.set(session.accessToken);
+    this.refreshToken.set(session.refreshToken);
+    this.actor.set(session.actor);
+    this.persist();
+  }
 
+  private clearSession(): void {
+    this.accessToken.set(null);
+    this.refreshToken.set(null);
+    this.actor.set(null);
+    this.hydrated.set(true);
+    this.browserStorageService.removeLocalItem(this.storageKey);
+  }
+
+  private persist(): void {
     this.browserStorageService.setLocalItem(this.storageKey, JSON.stringify({
       accessToken: this.accessToken(),
-      displayName: this.displayName(),
-      tenantId: this.tenantId(),
-      branchId: this.branchId(),
-      permissions: this.permissions()
-    }));
+      refreshToken: this.refreshToken(),
+      actor: this.actor()
+    } satisfies PersistedStaffSession));
   }
 }

@@ -6,5 +6,6 @@ export const CONSUMER_FRONTEND_RUNTIME_CONFIG: FrontendRuntimeConfig = {
   consumerApiBaseUrl: '/api/consumer',
   tenantAdminApiBaseUrl: '/api/tenant-admin',
   platformAdminApiBaseUrl: '/api/platform-admin',
-  realtimeBaseUrl: '/api/realtime'
+  realtimeBaseUrl: '/api/realtime',
+  realtimeEnabled: false
 };
