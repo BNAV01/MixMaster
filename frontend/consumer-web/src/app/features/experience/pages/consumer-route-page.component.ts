@@ -1,20 +1,9 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
-import {
-  BenefitCardComponent,
-  BenefitCardViewModel
-} from '@mixmaster/consumer/loyalty';
-import {
-  FeedbackPromptComponent
-} from '@mixmaster/consumer/feedback';
-import {
-  DislikeChipComponent,
-  TasteChipComponent
-} from '@mixmaster/consumer/preferences';
-import {
-  RecommendationCardComponent,
-  RecommendationCardViewModel
-} from '@mixmaster/consumer/recommendations';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { BenefitCardComponent, BenefitCardViewModel } from '@mixmaster/consumer/loyalty';
+import { FeedbackPromptComponent } from '@mixmaster/consumer/feedback';
+import { DislikeChipComponent, TasteChipComponent } from '@mixmaster/consumer/preferences';
+import { RecommendationCardComponent, RecommendationCardViewModel } from '@mixmaster/consumer/recommendations';
 import {
   MenuSectionListComponent,
   MenuSectionViewModel,
@@ -104,6 +93,45 @@ import { ConsumerSessionService } from '../../../core/services/consumer-session.
           <mm-command-bar [actions]="startActions()" (actionSelected)="handleStartAction($event)" />
         }
 
+        @case ('session') {
+          <div class="grid gap-4 lg:grid-cols-[1.1fr,0.9fr]">
+            <section class="mm-surface space-y-4 p-5">
+              <p class="mm-eyebrow">Sesion activa</p>
+              <h3 class="text-2xl font-semibold text-text">{{ consumerSessionService.activeBranchName() ?? 'Sucursal pendiente' }}</h3>
+              <div class="grid gap-3 sm:grid-cols-2">
+                <article class="rounded-2xl border border-border/15 bg-surface-2/70 p-4">
+                  <p class="text-sm text-muted">QR activo</p>
+                  <p class="mt-1 text-base font-medium text-text">{{ consumerSessionService.activeQrCode() ?? 'Sin QR resuelto' }}</p>
+                </article>
+                <article class="rounded-2xl border border-border/15 bg-surface-2/70 p-4">
+                  <p class="text-sm text-muted">Mesa o barra</p>
+                  <p class="mt-1 text-base font-medium text-text">{{ consumerSessionService.activeTableLabel() ?? 'Consumo libre' }}</p>
+                </article>
+                <article class="rounded-2xl border border-border/15 bg-surface-2/70 p-4">
+                  <p class="text-sm text-muted">Sesion anonima</p>
+                  <p class="mt-1 text-base font-medium text-text">{{ consumerSessionService.sessionId() ?? 'Aun no persistida' }}</p>
+                </article>
+                <article class="rounded-2xl border border-border/15 bg-surface-2/70 p-4">
+                  <p class="text-sm text-muted">Perfil</p>
+                  <p class="mt-1 text-base font-medium text-text">{{ consumerSessionService.anonymousProfileId() ?? 'Aun no asignado' }}</p>
+                </article>
+              </div>
+            </section>
+
+            <section class="mm-surface space-y-4 p-5">
+              <p class="mm-eyebrow">Siguiente paso</p>
+              <h3 class="text-2xl font-semibold text-text">La sesion ya puede alimentar carta, recomendaciones y merge</h3>
+              <p class="text-sm leading-6 text-muted">
+                Esta pantalla sirve como punto de control para diagnostico, continuidad y futuras mejoras de rehidratacion del flujo consumidor.
+              </p>
+              <div class="flex flex-wrap gap-3">
+                <a routerLink="/menu" class="mm-button-primary">Ir a la carta</a>
+                <a routerLink="/experience/recommendations" class="mm-button-secondary">Pedir recomendaciones</a>
+              </div>
+            </section>
+          </div>
+        }
+
         @case ('menu') {
           @if (experienceFacade.menuStatus() === 'loading') {
             <mm-loading-skeleton [cards]="3" />
@@ -179,6 +207,35 @@ import { ConsumerSessionService } from '../../../core/services/consumer-session.
           </section>
         }
 
+        @case ('pairings') {
+          <div class="grid gap-4 lg:grid-cols-[1.15fr,0.85fr]">
+            <div class="space-y-4">
+              <div class="mm-card-grid">
+                @for (recommendation of recommendationCards(); track recommendation.id) {
+                  <mm-recommendation-card [recommendation]="recommendation" />
+                }
+              </div>
+            </div>
+
+            <section class="mm-surface space-y-4 p-5">
+              <p class="mm-eyebrow">Pairings sugeridos</p>
+              <h3 class="text-2xl font-semibold text-text">No solo que pedir, sino con que combinarlo</h3>
+              <div class="space-y-3">
+                <article class="rounded-2xl border border-border/15 bg-surface-2/70 p-4">
+                  <p class="text-sm text-muted">Recomendacion segura</p>
+                  <p class="mt-1 font-semibold text-text">Spritz citrico + tabla fresca</p>
+                  <p class="mt-2 text-sm leading-6 text-muted">Pensado para una mesa que quiere algo compartible, ligero y facil de repetir.</p>
+                </article>
+                <article class="rounded-2xl border border-border/15 bg-surface-2/70 p-4">
+                  <p class="text-sm text-muted">Exploracion controlada</p>
+                  <p class="mt-1 font-semibold text-text">Highball herbal + tapas saladas</p>
+                  <p class="mt-2 text-sm leading-6 text-muted">Sube novedad sin perder compatibilidad con tus gustos actuales y el momento de consumo.</p>
+                </article>
+              </div>
+            </section>
+          </div>
+        }
+
         @case ('feedback') {
           <mm-feedback-prompt
             (sentimentSelected)="feedbackSentiment.set($event)"
@@ -248,6 +305,95 @@ import { ConsumerSessionService } from '../../../core/services/consumer-session.
           </section>
         }
 
+        @case ('account-overview') {
+          <div class="grid gap-4 lg:grid-cols-[1.2fr,0.8fr]">
+            <section class="mm-surface space-y-4 p-5">
+              <p class="mm-eyebrow">Cuenta activa</p>
+              <h3 class="text-3xl font-semibold text-text">{{ consumerAuthService.displayName() ?? 'Consumidor MixMaster' }}</h3>
+              <p class="text-sm leading-6 text-muted">
+                Tu cuenta concentra historial, favoritos, beneficios y continuidad entre visitas o sucursales afiliadas.
+              </p>
+              <div class="flex flex-wrap gap-3">
+                <a routerLink="/account/history" class="mm-button-primary">Ver historial</a>
+                <a routerLink="/account/favorites" class="mm-button-secondary">Ver favoritos</a>
+              </div>
+            </section>
+
+            <section class="mm-surface space-y-4 p-5">
+              <p class="mm-eyebrow">Estado</p>
+              <div class="space-y-3">
+                <article class="rounded-2xl border border-border/15 bg-surface-2/70 p-4">
+                  <p class="text-sm text-muted">Perfil persistente</p>
+                  <p class="mt-1 font-semibold text-text">{{ consumerAuthService.consumerProfileId() ?? 'Pendiente' }}</p>
+                </article>
+                <article class="rounded-2xl border border-border/15 bg-surface-2/70 p-4">
+                  <p class="text-sm text-muted">Merge potencial</p>
+                  <p class="mt-1 font-semibold text-text">{{ consumerSessionService.hasAnonymousProfile() ? 'Disponible para revisar' : 'Sin merge pendiente' }}</p>
+                </article>
+              </div>
+            </section>
+          </div>
+        }
+
+        @case ('account-history') {
+          <section class="space-y-4">
+            <div class="mm-card-grid">
+              @for (recommendation of recommendationCards(); track recommendation.id) {
+                <mm-recommendation-card [recommendation]="recommendation" />
+              }
+            </div>
+
+            <section class="mm-surface space-y-4 p-5">
+              <p class="mm-eyebrow">Continuidad</p>
+              <p class="text-sm leading-6 text-muted">
+                Aqui quedaran tus resultados vistos, picks aceptados, feedback y sesiones fusionadas para reordenar mejor la experiencia futura.
+              </p>
+            </section>
+          </section>
+        }
+
+        @case ('account-favorites') {
+          <div class="mm-card-grid">
+            @for (favorite of favoriteProducts(); track favorite.id) {
+              <mm-product-card [product]="favorite" />
+            }
+          </div>
+        }
+
+        @case ('account-benefits') {
+          <div class="grid gap-4 lg:grid-cols-[1.25fr,1fr]">
+            <section class="mm-surface space-y-4 p-5">
+              <p class="mm-eyebrow">Wallet activa</p>
+              <h3 class="text-3xl font-semibold text-text">{{ experienceFacade.loyaltySnapshot()?.pointsBalance ?? 120 }} pts</h3>
+              <p class="text-sm leading-6 text-muted">Tu cuenta ya puede acumular, canjear y reutilizar beneficios en proximas visitas.</p>
+            </section>
+
+            <div class="grid gap-4">
+              @for (benefit of benefits(); track benefit.id) {
+                <mm-benefit-card [benefit]="benefit" />
+              }
+            </div>
+          </div>
+        }
+
+        @case ('account-settings') {
+          <section class="mm-surface space-y-5 p-5">
+            <p class="mm-eyebrow">Ajustes del perfil</p>
+            <h3 class="text-2xl font-semibold text-text">Controla continuidad, consentimiento y preferencias</h3>
+            <div class="grid gap-3">
+              <label class="rounded-2xl border border-border/15 bg-surface-2/70 p-4 text-sm text-muted">
+                <span class="block font-medium text-text">Idioma preferido</span>
+                <span class="mt-1 block">Preparado para configuracion por cuenta y por tenant.</span>
+              </label>
+              <label class="rounded-2xl border border-border/15 bg-surface-2/70 p-4 text-sm text-muted">
+                <span class="block font-medium text-text">Consentimiento y comunicacion</span>
+                <span class="mt-1 block">Base lista para separar marketing, personalizacion y retencion tecnica.</span>
+              </label>
+              <button type="button" class="mm-button-secondary" (click)="consumerAuthService.logout()">Cerrar sesion</button>
+            </div>
+          </section>
+        }
+
         @case ('merge-history') {
           <section class="mm-surface space-y-4 p-5">
             <p class="mm-eyebrow">Merge listo</p>
@@ -257,11 +403,56 @@ import { ConsumerSessionService } from '../../../core/services/consumer-session.
         }
 
         @default {
-          <mm-empty-state
-            title="Pantalla en consolidacion"
-            description="La ruta existe, pero aun no tiene layout especifico asignado."
-          />
+          <section class="grid gap-4 lg:grid-cols-[1.15fr,0.85fr]">
+            <article class="mm-surface space-y-4 p-5">
+              <p class="mm-eyebrow">Proximo paso</p>
+              <h3 class="text-2xl font-semibold text-text">{{ content.title }}</h3>
+              <p class="text-sm leading-6 text-muted">{{ content.description }}</p>
+              <mm-command-bar [actions]="genericActions()" />
+            </article>
+
+            <article class="mm-surface space-y-4 p-5">
+              <p class="mm-eyebrow">Atajos utiles</p>
+              @if (content.quickLinks?.length) {
+                <div class="grid gap-3">
+                  @for (link of content.quickLinks; track link.route) {
+                    <a
+                      [routerLink]="link.route"
+                      class="rounded-2xl border border-border/15 bg-surface-2/70 px-4 py-3 text-sm font-medium text-text transition duration-240 ease-expressive hover:border-accent/20 hover:bg-surface-2"
+                    >
+                      {{ link.label }}
+                    </a>
+                  }
+                </div>
+              } @else {
+                <mm-empty-state
+                  title="Ruta registrada"
+                  description="La vista ya forma parte del mapa de producto y puede recibir layout especifico en la siguiente iteracion."
+                />
+              }
+            </article>
+          </section>
         }
+      }
+
+      @if (content.quickLinks?.length && content.pageId !== 'merge-history') {
+        <section class="mm-surface space-y-4 p-5">
+          <div>
+            <p class="mm-eyebrow">Navegacion contextual</p>
+            <h3 class="text-xl font-semibold text-text">Sigue el flujo sin perder contexto</h3>
+          </div>
+
+          <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            @for (link of content.quickLinks; track link.route) {
+              <a
+                [routerLink]="link.route"
+                class="rounded-2xl border border-border/15 bg-surface-2/70 px-4 py-4 text-sm font-medium text-text transition duration-240 ease-expressive hover:border-accent/20 hover:bg-surface-2"
+              >
+                {{ link.label }}
+              </a>
+            }
+          </div>
+        </section>
       }
     </section>
   `,
@@ -269,10 +460,11 @@ import { ConsumerSessionService } from '../../../core/services/consumer-session.
 })
 export class ConsumerRoutePageComponent {
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   protected readonly experienceFacade = inject(ConsumerExperienceFacade);
   protected readonly consumerSessionService = inject(ConsumerSessionService);
   protected readonly realtimeConnectionService = inject(RealtimeConnectionService);
-  private readonly consumerAuthService = inject(ConsumerAuthService);
+  protected readonly consumerAuthService = inject(ConsumerAuthService);
 
   protected readonly selectedIntent = signal<'safe' | 'explore' | 'help-me-decide'>('help-me-decide');
   protected readonly selectedTastes = signal<string[]>(['citrico']);
@@ -283,6 +475,13 @@ export class ConsumerRoutePageComponent {
   protected readonly content = this.route.snapshot.data as SectionPageContent;
   protected readonly tastes = signal(['citrico', 'herbal', 'frutal', 'seco', 'espumoso', 'sin alcohol']);
   protected readonly dislikes = signal(['muy dulce', 'muy amargo', 'picante', 'alto alcohol']);
+
+  protected readonly genericActions = computed<CommandAction[]>(() =>
+    (this.content.actions ?? []).map((label) => ({
+      id: label.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+      label
+    }))
+  );
 
   protected readonly menuSections = computed<MenuSectionViewModel[]>(() =>
     (this.experienceFacade.publishedMenu()?.sections ?? []).map((section) => ({
@@ -344,10 +543,15 @@ export class ConsumerRoutePageComponent {
       case 'recommendations':
       case 'explore':
       case 'refine':
+      case 'pairings':
       case 'favorites':
+      case 'account-favorites':
+      case 'account-history':
         this.experienceFacade.loadRecommendations(this.content.pageId === 'explore' ? 'explore' : 'hybrid');
         break;
       case 'benefits':
+      case 'account-benefits':
+      case 'account-overview':
         this.experienceFacade.loadLoyaltySnapshot();
         break;
       default:
@@ -402,16 +606,30 @@ export class ConsumerRoutePageComponent {
   protected handleStartAction(actionId: string): void {
     if (actionId === 'go-recommendations') {
       this.experienceFacade.loadRecommendations(this.selectedIntent() === 'explore' ? 'explore' : 'hybrid');
+      void this.router.navigateByUrl('/experience/recommendations');
     }
 
     if (actionId === 'go-menu') {
       this.experienceFacade.loadPublishedMenu(this.consumerSessionService.activeQrCode() ?? 'demo-negroni-table-12');
+      void this.router.navigateByUrl('/menu');
+    }
+
+    if (actionId === 'go-preferences') {
+      void this.router.navigateByUrl('/experience/preferences');
     }
   }
 
   protected handleExploreAction(actionId: string): void {
     if (actionId === 'refresh') {
       this.experienceFacade.loadRecommendations('explore');
+    }
+
+    if (actionId === 'pairing') {
+      void this.router.navigateByUrl('/experience/pairings');
+    }
+
+    if (actionId === 'safe') {
+      void this.router.navigateByUrl('/experience/recommendations');
     }
   }
 
@@ -422,5 +640,7 @@ export class ConsumerRoutePageComponent {
       consumerProfileId: 'consumer-profile-demo',
       displayName: 'Invitado MixMaster'
     });
+
+    void this.router.navigateByUrl(this.route.snapshot.queryParamMap.get('redirectTo') ?? '/account');
   }
 }

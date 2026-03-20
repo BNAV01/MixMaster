@@ -15,12 +15,35 @@ export const EXPERIENCE_ROUTES: Routes = [
       description: 'Entrada rápida al flujo de recomendación, exploración y carta viva.',
       actions: ['Elegir objetivo', 'Entrar por QR', 'Continuar sin cuenta'],
       quickLinks: [
+        { label: 'Resumen de sesion', route: '/experience/session' },
         { label: 'Ir a preferencias', route: '/experience/preferences' },
-        { label: 'Explorar carta', route: '/experience/recommendations' }
+        { label: 'Explorar carta', route: '/menu' }
       ],
       metrics: [
         { label: 'Cuenta', value: 'Opcional' },
         { label: 'Tiempo', value: '< 30 seg', tone: 'accent' }
+      ]
+    }
+  },
+  {
+    path: 'session',
+    component: ConsumerRoutePageComponent,
+    canActivate: [anonymousSessionGuard],
+    title: 'Session Context',
+    data: {
+      pageId: 'session',
+      eyebrow: 'Consumer Flow',
+      title: 'Contexto activo de la visita',
+      description: 'Resumen de QR, sucursal, mesa y estado de la sesion anonima o recuperada.',
+      actions: ['Ver carta', 'Actualizar gustos', 'Continuar experiencia'],
+      quickLinks: [
+        { label: 'Ver carta', route: '/menu' },
+        { label: 'Preferencias', route: '/experience/preferences' },
+        { label: 'Recomendaciones', route: '/experience/recommendations' }
+      ],
+      metrics: [
+        { label: 'Perfil', value: 'Anonimo recuperable' },
+        { label: 'Entrada', value: 'QR + sesion', tone: 'accent' }
       ]
     }
   },
@@ -40,7 +63,8 @@ export const EXPERIENCE_ROUTES: Routes = [
       actions: ['Ver secciones', 'Buscar algo seguro', 'Explorar categoria'],
       quickLinks: [
         { label: 'Preferencias', route: '/experience/preferences' },
-        { label: 'Para ti', route: '/experience/recommendations' }
+        { label: 'Para ti', route: '/experience/recommendations' },
+        { label: 'Ver pairings', route: '/experience/pairings' }
       ],
       metrics: [
         { label: 'Fuente', value: 'Carta publicada' },
@@ -61,7 +85,8 @@ export const EXPERIENCE_ROUTES: Routes = [
       actions: ['Marcar gustos', 'Marcar rechazos', 'Ajustar contexto'],
       quickLinks: [
         { label: 'Ver resultados', route: '/experience/recommendations' },
-        { label: 'Volver al inicio', route: '/experience/start' }
+        { label: 'Volver al inicio', route: '/experience/start' },
+        { label: 'Ver sesion', route: '/experience/session' }
       ],
       metrics: [
         { label: 'Inputs', value: 'Guiados' },
@@ -82,7 +107,8 @@ export const EXPERIENCE_ROUTES: Routes = [
       actions: ['Aceptar', 'Refinar', 'Guardar favorito'],
       quickLinks: [
         { label: 'Afinar resultados', route: '/experience/refine' },
-        { label: 'Dar feedback', route: '/experience/feedback' }
+        { label: 'Dar feedback', route: '/experience/feedback' },
+        { label: 'Ver pairings', route: '/experience/pairings' }
       ],
       metrics: [
         { label: 'Top picks', value: '3 a 5', tone: 'accent' },
@@ -103,7 +129,8 @@ export const EXPERIENCE_ROUTES: Routes = [
       actions: ['Más suave', 'Más atrevido', 'Cambiar contexto'],
       quickLinks: [
         { label: 'Volver a resultados', route: '/experience/recommendations' },
-        { label: 'Modo exploración', route: '/experience/explore' }
+        { label: 'Modo exploración', route: '/experience/explore' },
+        { label: 'Abrir pairings', route: '/experience/pairings' }
       ],
       metrics: [
         { label: 'Fricción', value: 'Baja' },
@@ -124,11 +151,34 @@ export const EXPERIENCE_ROUTES: Routes = [
       actions: ['Explorar', 'Volver a seguro', 'Probar maridaje'],
       quickLinks: [
         { label: 'Volver a recomendaciones', route: '/experience/recommendations' },
-        { label: 'Ver beneficios', route: '/experience/benefits' }
+        { label: 'Ver beneficios', route: '/experience/benefits' },
+        { label: 'Ver pairings', route: '/experience/pairings' }
       ],
       metrics: [
         { label: 'Novedad', value: 'Controlada', tone: 'warning' },
         { label: 'Descubrimiento', value: 'Premiable', tone: 'accent' }
+      ]
+    }
+  },
+  {
+    path: 'pairings',
+    component: ConsumerRoutePageComponent,
+    canActivate: [anonymousSessionGuard],
+    title: 'Pairings',
+    data: {
+      pageId: 'pairings',
+      eyebrow: 'Consumer Flow',
+      title: 'Bebidas y comida que combinan',
+      description: 'Cruce de recomendaciones con pairings sugeridos para compartir, comer o cerrar la visita con algo mejor conectado.',
+      actions: ['Ver combo', 'Volver a seguro', 'Guardar pairing'],
+      quickLinks: [
+        { label: 'Volver a recomendaciones', route: '/experience/recommendations' },
+        { label: 'Explorar mas', route: '/experience/explore' },
+        { label: 'Dar feedback', route: '/experience/feedback' }
+      ],
+      metrics: [
+        { label: 'Cruce', value: 'Bebida + comida', tone: 'accent' },
+        { label: 'Contexto', value: 'Visita actual' }
       ]
     }
   },
@@ -166,7 +216,8 @@ export const EXPERIENCE_ROUTES: Routes = [
       actions: ['Guardar', 'Ver historial', 'Crear cuenta'],
       quickLinks: [
         { label: 'Ver historial', route: '/experience/history' },
-        { label: 'Crear cuenta', route: '/register' }
+        { label: 'Crear cuenta', route: '/register' },
+        { label: 'Ir a cuenta', route: '/account' }
       ],
       metrics: [
         { label: 'Persistencia', value: 'Condicional' },
@@ -187,7 +238,8 @@ export const EXPERIENCE_ROUTES: Routes = [
       actions: ['Revisar puntos', 'Ver nivel', 'Canjear'],
       quickLinks: [
         { label: 'Ver favoritos', route: '/experience/favorites' },
-        { label: 'Crear cuenta', route: '/register' }
+        { label: 'Crear cuenta', route: '/register' },
+        { label: 'Ver cuenta', route: '/account/benefits' }
       ],
       metrics: [
         { label: 'Puntos', value: 'Por visita', tone: 'accent' },
@@ -208,7 +260,8 @@ export const EXPERIENCE_ROUTES: Routes = [
       actions: ['Revisar sesión', 'Fusionar historial', 'Continuar'],
       quickLinks: [
         { label: 'Iniciar sesión', route: '/login' },
-        { label: 'Crear cuenta', route: '/register' }
+        { label: 'Crear cuenta', route: '/register' },
+        { label: 'Cuenta e historial', route: '/account/history' }
       ],
       metrics: [
         { label: 'Perfil', value: 'Anónimo o registrado' },

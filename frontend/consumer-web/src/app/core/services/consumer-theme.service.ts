@@ -10,7 +10,7 @@ export class ConsumerThemeService {
   ) {}
 
   applyAppTheme(): void {
-    this.document.documentElement.dataset['app'] = 'consumer-web';
+    this.document.documentElement?.setAttribute('data-app', 'consumer-web');
     this.browserStorageService.setDocumentAttribute('data-mm-color-scheme', 'dark');
   }
 }

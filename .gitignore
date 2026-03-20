@@ -7,6 +7,11 @@ Thumbs.db
 ## Root temp
 *.log
 
+## Env files
+backend/**/.env
+backend/**/.env.*
+!backend/**/.env.example
+
 ## Backend
 backend/**/target/
 backend/**/.mvn/wrapper/maven-wrapper.jar
@@ -21,4 +26,3 @@ frontend/**/coverage/
 MixMaster/**/node_modules/
 MixMaster/**/target/
 MixMaster/**/dist/
-

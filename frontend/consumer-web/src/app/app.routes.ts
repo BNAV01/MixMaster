@@ -10,6 +10,7 @@ export const routes: Routes = [
     children: [
       { path: '', pathMatch: 'full', redirectTo: 'experience/start' },
       { path: 'q/:qrCode', component: QrEntryPageComponent, canActivate: [qrContextGuard], title: 'QR Entry' },
+      { path: 'menu', redirectTo: 'experience/menu', pathMatch: 'full' },
       {
         path: 'experience',
         loadChildren: () => import('./features/experience/experience.routes').then((module) => module.EXPERIENCE_ROUTES)
