@@ -38,7 +38,7 @@ La raíz actual del repositorio es la base oficial del proyecto. No existe una c
 
 ## Stack base
 
-- `Backend`: Spring Boot, Java 21, Spring Security, JPA, Flyway, MySQL, Actuator, Redis, WebSocket/SSE readiness.
+- `Backend`: Spring Boot, Java 21, Spring Security, JPA, Flyway, MariaDB, Actuator, Redis, WebSocket/SSE readiness.
 - `Frontend`: Angular 21, 3 apps separadas por audiencia, SSR solo para `consumer-web`.
 - `Base de datos`: relacional, multitenant shared-schema con `tenant_id`.
 - `Documentación`: viva dentro de `documents/`.

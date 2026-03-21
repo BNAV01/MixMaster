@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -122,22 +122,35 @@ type TenantSupportCategory = 'BILLING' | 'ONBOARDING' | 'OPERATIONS' | 'LEGAL' |
 
                 <label class="grid gap-2">
                   <span class="text-sm font-medium text-text">Nombre completo</span>
-                  <input class="mm-input" type="text" name="fullName" [(ngModel)]="newStaffFullName" required />
+                  <input class="mm-input" type="text" name="fullName" [(ngModel)]="newStaffFullName" (ngModelChange)="staffUserFormMessage.set(null)" required />
                 </label>
 
                 <label class="grid gap-2">
                   <span class="text-sm font-medium text-text">Correo</span>
-                  <input class="mm-input" type="email" name="email" [(ngModel)]="newStaffEmail" required />
+                  <input class="mm-input" type="email" name="email" [(ngModel)]="newStaffEmail" (ngModelChange)="staffUserFormMessage.set(null)" required />
                 </label>
 
                 <label class="grid gap-2">
                   <span class="text-sm font-medium text-text">Contraseña inicial</span>
-                  <input class="mm-input" type="password" name="password" [(ngModel)]="newStaffPassword" required />
+                  <input
+                    class="mm-input"
+                    type="password"
+                    name="password"
+                    [(ngModel)]="newStaffPassword"
+                    (ngModelChange)="staffUserFormMessage.set(null)"
+                    minlength="8"
+                    maxlength="128"
+                    required
+                  />
+                  <p class="text-xs text-muted">Debe tener entre 8 y 128 caracteres.</p>
+                  @if (newStaffPassword && (newStaffPassword.length < 8 || newStaffPassword.length > 128)) {
+                    <p class="text-sm text-danger">La contraseña inicial debe tener entre 8 y 128 caracteres.</p>
+                  }
                 </label>
 
                 <label class="grid gap-2">
                   <span class="text-sm font-medium text-text">Rol</span>
-                  <select class="mm-input" name="roleCode" [(ngModel)]="selectedRoleCode">
+                  <select class="mm-input" name="roleCode" [(ngModel)]="selectedRoleCode" (ngModelChange)="staffUserFormMessage.set(null)">
                     @for (role of workspaceFacade.roles(); track role.roleId) {
                       <option [value]="role.code">{{ role.name }}</option>
                     }
@@ -146,7 +159,7 @@ type TenantSupportCategory = 'BILLING' | 'ONBOARDING' | 'OPERATIONS' | 'LEGAL' |
 
                 <label class="grid gap-2">
                   <span class="text-sm font-medium text-text">Scope</span>
-                  <select class="mm-input" name="scopeType" [(ngModel)]="selectedScopeType">
+                  <select class="mm-input" name="scopeType" [(ngModel)]="selectedScopeType" (ngModelChange)="staffUserFormMessage.set(null)">
                     <option value="TENANT">Tenant completo</option>
                     <option value="BRANCH">Sucursal especifica</option>
                   </select>
@@ -172,7 +185,7 @@ type TenantSupportCategory = 'BILLING' | 'ONBOARDING' | 'OPERATIONS' | 'LEGAL' |
 
                 <label class="grid gap-2">
                   <span class="text-sm font-medium text-text">Estado inicial</span>
-                  <select class="mm-input" name="status" [(ngModel)]="selectedStatus">
+                  <select class="mm-input" name="status" [(ngModel)]="selectedStatus" (ngModelChange)="staffUserFormMessage.set(null)">
                     <option value="ACTIVE">Activo</option>
                     <option value="INVITED">Invitado</option>
                     <option value="DISABLED">Deshabilitado</option>
@@ -180,11 +193,21 @@ type TenantSupportCategory = 'BILLING' | 'ONBOARDING' | 'OPERATIONS' | 'LEGAL' |
                 </label>
 
                 <label class="flex items-center gap-3 text-sm text-text">
-                  <input type="checkbox" name="requireReset" [(ngModel)]="requirePasswordReset" />
+                  <input type="checkbox" name="requireReset" [(ngModel)]="requirePasswordReset" (ngModelChange)="staffUserFormMessage.set(null)" />
                   <span>Forzar cambio de contraseña en el primer ingreso</span>
                 </label>
 
-                <button type="submit" class="mm-button-primary w-full" [disabled]="workspaceFacade.saveStatus() === 'loading'">
+                @if (staffUserFormMessage()) {
+                  <p class="rounded-2xl border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-danger">
+                    {{ staffUserFormMessage() }}
+                  </p>
+                }
+
+                <button
+                  type="submit"
+                  class="mm-button-primary w-full"
+                  [disabled]="workspaceFacade.saveStatus() === 'loading' || !canCreateStaffUser()"
+                >
                   {{ workspaceFacade.saveStatus() === 'loading' ? 'Guardando...' : 'Crear usuario interno' }}
                 </button>
               </form>
@@ -653,6 +676,7 @@ export class TenantRoutePageComponent {
   protected selectedBranchIds: string[] = [];
   protected selectedStatus: 'ACTIVE' | 'INVITED' | 'DISABLED' = 'ACTIVE';
   protected requirePasswordReset = true;
+  protected readonly staffUserFormMessage = signal<string | null>(null);
   protected temporaryPassword = '';
   protected readonly supportCategories: TenantSupportCategory[] = ['OPERATIONS', 'INCIDENT', 'ONBOARDING', 'LEGAL', 'PRODUCT', 'BILLING', 'OTHER'];
   protected readonly supportPriorities: TenantSupportTicketPriorityDto[] = ['LOW', 'MEDIUM', 'HIGH', 'URGENT'];
@@ -721,12 +745,19 @@ export class TenantRoutePageComponent {
   }
 
   protected toggleBranch(branchId: string, checked: boolean): void {
+    this.staffUserFormMessage.set(null);
     this.selectedBranchIds = checked
       ? [...this.selectedBranchIds, branchId]
       : this.selectedBranchIds.filter((currentBranchId) => currentBranchId !== branchId);
   }
 
   protected createStaffUser(): void {
+    const validationMessage = this.validateStaffUserForm();
+    this.staffUserFormMessage.set(validationMessage);
+    if (validationMessage) {
+      return;
+    }
+
     this.workspaceFacade.createStaffUser({
       email: this.newStaffEmail.trim(),
       fullName: this.newStaffFullName.trim(),
@@ -741,6 +772,10 @@ export class TenantRoutePageComponent {
         }
       ]
     });
+  }
+
+  protected canCreateStaffUser(): boolean {
+    return this.validateStaffUserForm() === null;
   }
 
   protected createBrand(): void {
@@ -768,6 +803,30 @@ export class TenantRoutePageComponent {
 
   protected resetPassword(userId: string): void {
     this.workspaceFacade.resetStaffPassword(userId, this.temporaryPassword.trim(), true);
+  }
+
+  private validateStaffUserForm(): string | null {
+    if (!this.newStaffFullName.trim()) {
+      return 'El nombre completo es obligatorio.';
+    }
+
+    if (!this.newStaffEmail.trim()) {
+      return 'El correo es obligatorio.';
+    }
+
+    if (this.newStaffPassword.length < 8 || this.newStaffPassword.length > 128) {
+      return 'La contraseña inicial debe tener entre 8 y 128 caracteres.';
+    }
+
+    if (!this.selectedRoleCode) {
+      return 'Debes seleccionar un rol.';
+    }
+
+    if (this.selectedScopeType === 'BRANCH' && this.selectedBranchIds.length === 0) {
+      return 'Debes seleccionar al menos una sucursal para ese alcance.';
+    }
+
+    return null;
   }
 
   protected toggleBranchStatus(

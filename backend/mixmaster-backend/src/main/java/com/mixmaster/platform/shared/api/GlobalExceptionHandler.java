@@ -4,11 +4,13 @@ import com.mixmaster.platform.interfaces.consumerweb.exceptions.ConsumerWebExcep
 import com.mixmaster.platform.interfaces.saasadmin.exceptions.SaasAdminException;
 import com.mixmaster.platform.interfaces.tenantconsole.exceptions.TenantConsoleException;
 import java.time.OffsetDateTime;
+import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -19,9 +21,17 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiErrorResponse> handleValidation(MethodArgumentNotValidException exception) {
+        String message = exception.getBindingResult().getFieldErrors().stream()
+            .map(this::formatFieldValidationMessage)
+            .distinct()
+            .collect(Collectors.joining("; "));
+        if (message.isBlank()) {
+            message = "Validation failed for the request body.";
+        }
+
         return ResponseEntity.badRequest().body(new ApiErrorResponse(
             "VALIDATION_ERROR",
-            exception.getMessage(),
+            message,
             OffsetDateTime.now()
         ));
     }
@@ -84,5 +94,10 @@ public class GlobalExceptionHandler {
             exception.getMessage(),
             OffsetDateTime.now()
         ));
+    }
+
+    private String formatFieldValidationMessage(FieldError fieldError) {
+        String defaultMessage = fieldError.getDefaultMessage() != null ? fieldError.getDefaultMessage() : "invalid value";
+        return "%s: %s".formatted(fieldError.getField(), defaultMessage);
     }
 }

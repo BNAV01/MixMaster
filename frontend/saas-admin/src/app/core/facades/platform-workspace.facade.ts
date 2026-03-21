@@ -14,10 +14,13 @@ import {
   UpdateTenantProfileRequestDto
 } from '@mixmaster/shared/api-clients';
 import { AsyncStatus, NormalizedApiError } from '@mixmaster/shared/models';
-import { take } from 'rxjs';
+import { finalize, take } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class PlatformWorkspaceFacade {
+  private tenantDetailRequestId: string | null = null;
+  private supportTicketRequestId: string | null = null;
+
   readonly workspace = signal<PlatformWorkspaceDto | null>(null);
   readonly tenants = signal<TenantSummaryDto[]>([]);
   readonly tenantDetail = signal<TenantDetailDto | null>(null);
@@ -40,6 +43,10 @@ export class PlatformWorkspaceFacade {
   constructor(private readonly platformAdminApiClient: PlatformAdminApiClient) {}
 
   loadWorkspace(): void {
+    if (this.workspaceStatus() === 'loading') {
+      return;
+    }
+
     this.workspaceStatus.set('loading');
     this.errorMessage.set(null);
 
@@ -76,6 +83,10 @@ export class PlatformWorkspaceFacade {
   }
 
   loadTenants(): void {
+    if (this.tenantsStatus() === 'loading') {
+      return;
+    }
+
     this.tenantsStatus.set('loading');
     this.errorMessage.set(null);
 
@@ -93,10 +104,22 @@ export class PlatformWorkspaceFacade {
   }
 
   loadTenantDetail(tenantId: string): void {
+    if (this.detailStatus() === 'loading' && this.tenantDetailRequestId === tenantId) {
+      return;
+    }
+
+    this.tenantDetailRequestId = tenantId;
     this.detailStatus.set('loading');
     this.errorMessage.set(null);
 
-    this.platformAdminApiClient.getTenantDetail(tenantId).pipe(take(1)).subscribe({
+    this.platformAdminApiClient.getTenantDetail(tenantId).pipe(
+      take(1),
+      finalize(() => {
+        if (this.tenantDetailRequestId === tenantId) {
+          this.tenantDetailRequestId = null;
+        }
+      })
+    ).subscribe({
       next: (tenantDetail) => {
         this.tenantDetail.set(tenantDetail);
         this.detailStatus.set('success');
@@ -163,6 +186,10 @@ export class PlatformWorkspaceFacade {
   }
 
   loadAccountProfile(): void {
+    if (this.accountStatus() === 'loading') {
+      return;
+    }
+
     this.accountStatus.set('loading');
     this.errorMessage.set(null);
 
@@ -196,6 +223,10 @@ export class PlatformWorkspaceFacade {
   }
 
   loadSupportTickets(): void {
+    if (this.supportTicketsStatus() === 'loading') {
+      return;
+    }
+
     this.supportTicketsStatus.set('loading');
     this.errorMessage.set(null);
 
@@ -213,10 +244,22 @@ export class PlatformWorkspaceFacade {
   }
 
   loadSupportTicket(ticketId: string): void {
+    if (this.supportTicketDetailStatus() === 'loading' && this.supportTicketRequestId === ticketId) {
+      return;
+    }
+
+    this.supportTicketRequestId = ticketId;
     this.supportTicketDetailStatus.set('loading');
     this.errorMessage.set(null);
 
-    this.platformAdminApiClient.getSupportTicket(ticketId).pipe(take(1)).subscribe({
+    this.platformAdminApiClient.getSupportTicket(ticketId).pipe(
+      take(1),
+      finalize(() => {
+        if (this.supportTicketRequestId === ticketId) {
+          this.supportTicketRequestId = null;
+        }
+      })
+    ).subscribe({
       next: (ticket) => {
         this.supportTicketDetail.set(ticket);
         this.supportTicketDetailStatus.set('success');

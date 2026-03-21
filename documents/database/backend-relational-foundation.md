@@ -37,7 +37,7 @@ La meta de esta iteración no fue modelar todo el universo funcional, sino dejar
   `created_at DATETIME(6)`, `updated_at DATETIME(6)`
 - tablas append-only:
   `occurred_at` o `merged_at` como timestamp de negocio y `created_at` como timestamp técnico
-- el backend usa `OffsetDateTime` en Java y `DATETIME(6)` en MySQL
+- el backend usa `OffsetDateTime` en Java y `DATETIME(6)` en MariaDB
 
 ### Soft delete
 
@@ -152,7 +152,7 @@ La meta de esta iteración no fue modelar todo el universo funcional, sino dejar
 
 ## Cómo correr migraciones
 
-En un ambiente con MySQL accesible:
+En un ambiente con MariaDB accesible:
 
 ```bash
 cd backend/mixmaster-backend
@@ -167,12 +167,12 @@ Flyway correrá automáticamente al arrancar la aplicación mientras `spring.fly
   sigue siendo una validación portable del backend sin requerir Docker ni base de datos real
 - `./mvnw -DskipTests compile`
   valida compilación de entidades y mappings
-- validación end-to-end de Flyway + JPA contra MySQL:
-  debe ejecutarse en un entorno con MySQL local o con Docker disponible para Testcontainers
+- validación end-to-end de Flyway + JPA contra MariaDB:
+  debe ejecutarse en un entorno con MariaDB local o con Docker disponible para Testcontainers
 
 ## Próximo bloque recomendado
 
 - crear repositorios por agregado principal
 - introducir `tenant_id` filtering explícito en repositorios/servicios
 - modelar `product_state_change`, `product_price_history`, `recommendation_*`, `loyalty_*`, `sale*` y `consumption_record`
-- agregar pruebas de integración de esquema cuando el entorno tenga Docker o MySQL disponible
+- agregar pruebas de integración de esquema cuando el entorno tenga Docker o MariaDB disponible

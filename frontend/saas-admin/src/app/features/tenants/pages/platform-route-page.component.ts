@@ -1124,7 +1124,7 @@ export class PlatformRoutePageComponent {
       if (this.content.pageId === 'support'
         && !this.workspaceFacade.supportTicketDetail()
         && this.filteredSupportTickets().length > 0
-        && this.workspaceFacade.supportTicketDetailStatus() !== 'loading') {
+        && this.workspaceFacade.supportTicketDetailStatus() === 'idle') {
         this.openSupportTicket(this.filteredSupportTickets()[0].ticketId);
       }
     });

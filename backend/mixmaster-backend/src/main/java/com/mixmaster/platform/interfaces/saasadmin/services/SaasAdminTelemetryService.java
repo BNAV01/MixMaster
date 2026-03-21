@@ -6,6 +6,9 @@ import com.mixmaster.platform.modules.platform.status.models.PlatformDailySnapsh
 import com.mixmaster.platform.modules.platform.status.models.TenantDailySnapshot;
 import com.mixmaster.platform.modules.platform.status.repositories.PlatformDailySnapshotRepository;
 import com.mixmaster.platform.modules.platform.status.repositories.TenantDailySnapshotRepository;
+import com.mixmaster.platform.modules.organization.models.TenantOnboardingStage;
+import com.mixmaster.platform.modules.organization.models.TenantStatus;
+import com.mixmaster.platform.modules.organization.models.TenantSubscriptionStatus;
 import com.mixmaster.platform.modules.support.services.SupportTicketService;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -54,9 +57,11 @@ public class SaasAdminTelemetryService {
     @Transactional
     public WorkspaceTelemetryView refreshAll() {
         List<SaasAdminWorkspaceService.TenantSnapshot> liveTenants = saasAdminWorkspaceService.listTenantsLive();
-        liveTenants.forEach(this::persistTenantSnapshot);
-        persistPlatformSnapshot(liveTenants);
-        return loadWorkspace();
+        List<TenantDailySnapshot> tenantSnapshots = liveTenants.stream()
+            .map(this::persistTenantSnapshot)
+            .toList();
+        PlatformDailySnapshot platformSnapshot = persistPlatformSnapshot(liveTenants);
+        return buildWorkspaceTelemetryView(platformSnapshot, tenantSnapshots);
     }
 
     @Transactional
@@ -72,12 +77,23 @@ public class SaasAdminTelemetryService {
     @Transactional
     public WorkspaceTelemetryView loadWorkspace() {
         PlatformDailySnapshot platformSnapshot = platformDailySnapshotRepository.findTopByOrderByCapturedAtDesc()
-            .orElseGet(() -> refreshAll().overviewSnapshot());
-        List<TenantDailySnapshot> latestTenantSnapshots = tenantDailySnapshotRepository.findLatestSnapshots();
-        if (latestTenantSnapshots.isEmpty()) {
+            .orElse(null);
+        if (platformSnapshot == null) {
             return refreshAll();
         }
 
+        List<TenantDailySnapshot> latestTenantSnapshots = tenantDailySnapshotRepository.findLatestSnapshots();
+        if (latestTenantSnapshots.isEmpty() && platformSnapshot.getTotalTenants() > 0) {
+            return refreshAll();
+        }
+
+        return buildWorkspaceTelemetryView(platformSnapshot, latestTenantSnapshots);
+    }
+
+    private WorkspaceTelemetryView buildWorkspaceTelemetryView(
+        PlatformDailySnapshot platformSnapshot,
+        List<TenantDailySnapshot> latestTenantSnapshots
+    ) {
         List<TenantDailySnapshot> orderedTenantSnapshots = latestTenantSnapshots.stream()
             .sorted(Comparator.comparing(TenantDailySnapshot::getName, String.CASE_INSENSITIVE_ORDER))
             .toList();
@@ -101,18 +117,17 @@ public class SaasAdminTelemetryService {
     }
 
     private PlatformDailySnapshot persistPlatformSnapshot(List<SaasAdminWorkspaceService.TenantSnapshot> liveTenants) {
-        SaasAdminWorkspaceService.WorkspaceSnapshot liveWorkspace = saasAdminWorkspaceService.captureLiveWorkspace();
         PlatformDailySnapshot snapshot = new PlatformDailySnapshot();
         snapshot.setCapturedForDate(LocalDate.now(SANTIAGO_ZONE));
         snapshot.setCapturedAt(OffsetDateTime.now(SANTIAGO_ZONE));
-        snapshot.setTotalTenants(liveWorkspace.overview().totalTenants());
-        snapshot.setActiveTenants(liveWorkspace.overview().activeTenants());
-        snapshot.setTrialTenants(liveWorkspace.overview().trialTenants());
-        snapshot.setSuspendedTenants(liveWorkspace.overview().suspendedTenants());
-        snapshot.setLegalReadyTenants(liveWorkspace.overview().legalReadyTenants());
-        snapshot.setOnboardingPendingTenants(liveWorkspace.overview().onboardingPendingTenants());
-        snapshot.setExpiringTrials(liveWorkspace.overview().expiringTrials());
-        snapshot.setSiiVerifiedTenants(liveWorkspace.overview().siiVerifiedTenants());
+        snapshot.setTotalTenants(liveTenants.size());
+        snapshot.setActiveTenants(liveTenants.stream().filter(tenant -> tenant.status() == TenantStatus.ACTIVE).count());
+        snapshot.setTrialTenants(liveTenants.stream().filter(tenant -> tenant.subscriptionStatus() == TenantSubscriptionStatus.TRIAL).count());
+        snapshot.setSuspendedTenants(liveTenants.stream().filter(tenant -> tenant.status() == TenantStatus.SUSPENDED).count());
+        snapshot.setLegalReadyTenants(liveTenants.stream().filter(SaasAdminWorkspaceService.TenantSnapshot::legalReady).count());
+        snapshot.setOnboardingPendingTenants(liveTenants.stream().filter(tenant -> tenant.onboardingStage() != TenantOnboardingStage.LIVE).count());
+        snapshot.setExpiringTrials(liveTenants.stream().filter(this::isTrialExpiringSoon).count());
+        snapshot.setSiiVerifiedTenants(liveTenants.stream().filter(SaasAdminWorkspaceService.TenantSnapshot::siiStartActivitiesVerified).count());
         snapshot.setTotalStaffUsers(liveTenants.stream().mapToLong(tenant -> countStaffUsers(tenant.tenantId())).sum());
         snapshot.setActiveStaffUsers(liveTenants.stream().mapToLong(tenant -> countActiveStaffUsers(tenant.tenantId())).sum());
         snapshot.setOwnersPendingPasswordReset(liveTenants.stream().filter(SaasAdminWorkspaceService.TenantSnapshot::ownerPasswordResetRequired).count());
@@ -122,8 +137,21 @@ public class SaasAdminTelemetryService {
             ? 0
             : (int) Math.round(liveTenants.stream().mapToInt(SaasAdminWorkspaceService.TenantSnapshot::readinessScore).average().orElse(0)));
         OffsetDateTime cutoff = OffsetDateTime.now(SANTIAGO_ZONE).minusHours(24);
-        snapshot.setNewTenantsLast24h(liveTenants.stream().filter(tenant -> tenant.createdAt().atZone(SANTIAGO_ZONE).toOffsetDateTime().isAfter(cutoff)).count());
+        snapshot.setNewTenantsLast24h(liveTenants.stream()
+            .filter(tenant -> tenant.createdAt() != null)
+            .filter(tenant -> tenant.createdAt().atZone(SANTIAGO_ZONE).toOffsetDateTime().isAfter(cutoff))
+            .count());
         return platformDailySnapshotRepository.save(snapshot);
+    }
+
+    private boolean isTrialExpiringSoon(SaasAdminWorkspaceService.TenantSnapshot tenant) {
+        if (tenant.subscriptionStatus() != TenantSubscriptionStatus.TRIAL || tenant.trialEndsAt() == null) {
+            return false;
+        }
+
+        OffsetDateTime remainingCutoff = OffsetDateTime.now(SANTIAGO_ZONE).plusDays(7);
+        return !tenant.trialEndsAt().isBefore(OffsetDateTime.now(SANTIAGO_ZONE))
+            && !tenant.trialEndsAt().isAfter(remainingCutoff);
     }
 
     private TenantDailySnapshot persistTenantSnapshot(SaasAdminWorkspaceService.TenantSnapshot liveTenant) {

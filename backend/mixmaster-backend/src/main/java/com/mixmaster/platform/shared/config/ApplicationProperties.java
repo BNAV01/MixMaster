@@ -96,12 +96,12 @@ public class ApplicationProperties {
         public static class Bootstrap {
             private boolean enabled;
             private String platformFullName = "MixMaster SaaS Admin";
-            private String consumerUsername = "consumer.local";
-            private String consumerPassword = "change-me";
-            private String tenantUsername = "tenant.local";
-            private String tenantPassword = "change-me";
-            private String platformUsername = "platform.local";
-            private String platformPassword = "change-me";
+            private String consumerUsername = "consumer@local";
+            private String consumerPassword = "consumer-local";
+            private String tenantUsername = "tenant@local";
+            private String tenantPassword = "tenant-local";
+            private String platformUsername = "portal@local";
+            private String platformPassword = "portal-local";
 
             public boolean isEnabled() {
                 return enabled;

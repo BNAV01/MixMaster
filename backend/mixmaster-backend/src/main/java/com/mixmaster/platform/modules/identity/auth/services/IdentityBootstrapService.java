@@ -55,7 +55,7 @@ public class IdentityBootstrapService {
     private void ensureBootstrapPlatformAdmin() {
         ApplicationProperties.Security.Bootstrap bootstrap = applicationProperties.getSecurity().getBootstrap();
 
-        if (!bootstrap.isEnabled() || platformUserRepository.count() > 0) {
+        if (!bootstrap.isEnabled()) {
             return;
         }
 
@@ -63,13 +63,18 @@ public class IdentityBootstrapService {
             return;
         }
 
-        PlatformUser platformUser = new PlatformUser();
-        platformUser.setEmail(bootstrap.getPlatformUsername().trim().toLowerCase());
+        String platformEmail = bootstrap.getPlatformUsername().trim().toLowerCase();
+        PlatformUser platformUser = platformUserRepository.findByEmailIgnoreCase(platformEmail)
+            .orElseGet(PlatformUser::new);
+
+        platformUser.setEmail(platformEmail);
         platformUser.setFullName(bootstrap.getPlatformFullName());
         platformUser.setPasswordHash(passwordEncoder.encode(bootstrap.getPlatformPassword()));
         platformUser.setRoleCode(PlatformUserRole.SAAS_SUPER_ADMIN);
         platformUser.setStatus(PlatformUserStatus.ACTIVE);
         platformUser.setPasswordSetAt(OffsetDateTime.now());
+        platformUser.setFailedLoginAttempts(0);
+        platformUser.setLockedUntil(null);
         platformUserRepository.save(platformUser);
     }
 }

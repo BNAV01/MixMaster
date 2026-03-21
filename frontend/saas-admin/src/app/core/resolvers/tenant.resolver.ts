@@ -6,8 +6,6 @@ export const tenantResolver: ResolveFn<boolean> = (route) => {
   const facade = inject(PlatformWorkspaceFacade);
   const tenantId = route.paramMap.get('tenantId');
 
-  facade.loadTenants();
-
   if (tenantId) {
     facade.loadTenantDetail(tenantId);
   }

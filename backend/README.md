@@ -15,7 +15,7 @@ backend/mixmaster-backend
 - Spring Security
 - Spring Data JPA
 - Flyway
-- MySQL
+- MariaDB
 - Redis readiness
 - Actuator
 
@@ -28,17 +28,17 @@ cd backend/mixmaster-backend
 
 Base de datos local por defecto:
 
-- MySQL en `localhost:3306`
+- MariaDB en `localhost:3306`
 - base `mixmaster`
 - usuario `root`
 - password `root`
 
-Si tu MySQL corre en otro puerto o con otras credenciales, ajusta `DB_URL`, `DB_USERNAME` y `DB_PASSWORD` en [backend/mixmaster-backend/.env](/Volumes/DesktopDock/Repositorios/Laboral/MixMaster/backend/mixmaster-backend/.env).
+Si tu MariaDB corre en otro puerto o con otras credenciales, ajusta `DB_URL`, `DB_USERNAME` y `DB_PASSWORD` en [backend/mixmaster-backend/.env](/Volumes/DesktopDock/Repositorios/Laboral/MixMaster/backend/mixmaster-backend/.env).
 
 Perfil local por defecto:
 
 - `tenant@local / tenant-local`
-- `platform@local / platform-local`
+- `portal@local / portal-local`
 - `consumer@local / consumer-local`
 
 Pruebas:
@@ -115,5 +115,5 @@ cd backend/mixmaster-backend
   validación portable del backend sin requerir Docker
 - `./mvnw -DskipTests compile`
   validación de compilación del modelo JPA
-- validación end-to-end de Flyway + JPA contra MySQL:
-  debe ejecutarse en un entorno con MySQL accesible o con Docker disponible para Testcontainers
+- validación end-to-end de Flyway + JPA contra MariaDB:
+  debe ejecutarse en un entorno con MariaDB accesible o con Docker disponible para Testcontainers

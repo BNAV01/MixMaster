@@ -36,6 +36,10 @@ export class PlatformMessagingFacade {
   constructor(private readonly platformAdminApiClient: PlatformAdminApiClient) {}
 
   loadWorkspace(): void {
+    if (this.workspaceStatus() === 'loading') {
+      return;
+    }
+
     this.workspaceStatus.set('loading');
     this.errorMessage.set(null);
 

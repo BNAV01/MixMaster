@@ -11,6 +11,7 @@ import {
 import { PERMISSION_CHECKER } from '@mixmaster/shared/permissions';
 import { routes } from './app.routes';
 import { PLATFORM_FRONTEND_RUNTIME_CONFIG } from './core/config/platform-runtime.config';
+import { platformAuthRecoveryInterceptor } from './core/interceptors/platform-auth-recovery.interceptor';
 import { PlatformSessionService } from './core/services/platform-session.service';
 
 export const appConfig: ApplicationConfig = {
@@ -36,6 +37,7 @@ export const appConfig: ApplicationConfig = {
       withInterceptors([
         correlationIdInterceptor,
         authInterceptor,
+        platformAuthRecoveryInterceptor,
         errorNormalizationInterceptor
       ])
     ),

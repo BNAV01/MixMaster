@@ -13,7 +13,7 @@ Este documento deja explícitas las convenciones de implementación aplicadas so
 - `cross-cutting`: `shared/*`
 - `multitenancy`: `shared-schema` con headers de contexto
 - `config namespace`: `mixmaster.*`
-- `persistencia`: MySQL + Flyway
+- `persistencia`: MariaDB + Flyway
 - `capas de entrada`: DTOs, controllers, mappers, exceptions, security, services, utils, audit y excels por audiencia
 
 ## Cómo conviven capas y audiencias
@@ -70,7 +70,7 @@ Se dejaron fuera las piezas que provenían de otro producto o dependían de clas
 - propiedades `MediConnect` y configuración `app.*`
   estaban cargadas de dominios ajenos: emergency, clinic, ambulance, billing externo y portal web de otro sistema.
 - datasource PostgreSQL heredado
-  no coincidía con el stack actual del backend ni con `flyway-mysql`.
+  no coincidía con el stack actual del backend ni con el soporte Flyway para MariaDB.
 
 ## Justificación de la decisión
 
