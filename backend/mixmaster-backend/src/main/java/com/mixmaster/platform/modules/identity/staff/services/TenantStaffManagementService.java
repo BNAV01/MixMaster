@@ -138,13 +138,40 @@ public class TenantStaffManagementService {
 
     @Transactional
     public StaffUserView updateStaffUserStatus(String tenantId, Set<String> actorAccessibleBranchIds, String userId, StaffUserStatus status) {
-        StaffUser staffUser = requireManageableStaffUser(tenantId, actorAccessibleBranchIds, userId);
+        StaffUser staffUser = requireMutableStaffUser(tenantId, actorAccessibleBranchIds, userId);
         staffUser.setStatus(status);
         if (status != StaffUserStatus.LOCKED) {
             staffUser.setLockedUntil(null);
         }
         staffUserRepository.save(staffUser);
         return toStaffUserView(staffUser, staffAccessProfileService.buildProfile(staffUser), activeAssignments(tenantId, userId));
+    }
+
+    @Transactional
+    public StaffUserView updateStaffUserAccess(
+        String tenantId,
+        Set<String> actorAccessibleBranchIds,
+        String userId,
+        UpdateStaffUserAccessCommand command
+    ) {
+        requireAssignableScopes(tenantId, actorAccessibleBranchIds, command.assignments());
+        StaffUser staffUser = requireMutableStaffUser(tenantId, actorAccessibleBranchIds, userId);
+
+        staffUser.setStatus(command.status());
+        staffUser.setPasswordResetRequired(command.passwordResetRequired());
+        if (command.status() != StaffUserStatus.LOCKED) {
+            staffUser.setLockedUntil(null);
+        }
+        staffUserRepository.save(staffUser);
+
+        List<StaffRoleAssignment> currentAssignments = activeAssignments(tenantId, userId);
+        currentAssignments.forEach(assignment -> assignment.setStatus(StaffRoleAssignmentStatus.REVOKED));
+        staffRoleAssignmentRepository.saveAll(currentAssignments);
+
+        List<StaffRoleAssignment> nextAssignments = materializeAssignments(tenantId, staffUser, command.assignments());
+        staffRoleAssignmentRepository.saveAll(nextAssignments);
+
+        return toStaffUserView(staffUser, staffAccessProfileService.buildProfile(staffUser), nextAssignments);
     }
 
     @Transactional
@@ -155,7 +182,7 @@ public class TenantStaffManagementService {
         String newPassword,
         boolean requireReset
     ) {
-        StaffUser staffUser = requireManageableStaffUser(tenantId, actorAccessibleBranchIds, userId);
+        StaffUser staffUser = requireMutableStaffUser(tenantId, actorAccessibleBranchIds, userId);
         credentialSecurityService.validatePassword(newPassword, staffUser.getEmail(), staffUser.getFullName());
         staffUser.setPasswordHash(passwordEncoder.encode(newPassword));
         staffUser.setPasswordSetAt(OffsetDateTime.now());
@@ -317,6 +344,21 @@ public class TenantStaffManagementService {
         return staffUser;
     }
 
+    private StaffUser requireMutableStaffUser(String tenantId, Set<String> actorAccessibleBranchIds, String userId) {
+        StaffUser staffUser = requireManageableStaffUser(tenantId, actorAccessibleBranchIds, userId);
+        if (isBootstrapStaffUser(tenantId, staffUser.getId())) {
+            throw new IllegalArgumentException("The bootstrap owner must be managed from the SaaS console credential flow");
+        }
+
+        return staffUser;
+    }
+
+    private boolean isBootstrapStaffUser(String tenantId, String userId) {
+        return staffUserRepository.findTopByTenantIdAndDeletedAtIsNullOrderByCreatedAtAsc(tenantId)
+            .map(bootstrapUser -> bootstrapUser.getId().equals(userId))
+            .orElse(false);
+    }
+
     private List<StaffRoleAssignment> activeAssignments(String tenantId, String userId) {
         return staffRoleAssignmentRepository.findAllByTenantIdAndStaffUserIdAndStatus(
             tenantId,
@@ -335,6 +377,7 @@ public class TenantStaffManagementService {
             staffUser.getEmail(),
             staffUser.getFullName(),
             staffUser.getStatus(),
+            isBootstrapStaffUser(staffUser.getTenantId(), staffUser.getId()),
             staffUser.isPasswordResetRequired(),
             staffUser.getLastLoginAt(),
             accessProfile == null ? Set.of() : accessProfile.permissions(),
@@ -381,6 +424,7 @@ public class TenantStaffManagementService {
         String email,
         String fullName,
         StaffUserStatus status,
+        boolean bootstrapProtected,
         boolean passwordResetRequired,
         OffsetDateTime lastLoginAt,
         Set<String> permissions,
@@ -401,6 +445,13 @@ public class TenantStaffManagementService {
         String email,
         String fullName,
         String password,
+        StaffUserStatus status,
+        boolean passwordResetRequired,
+        List<CreateAssignmentCommand> assignments
+    ) {
+    }
+
+    public record UpdateStaffUserAccessCommand(
         StaffUserStatus status,
         boolean passwordResetRequired,
         List<CreateAssignmentCommand> assignments

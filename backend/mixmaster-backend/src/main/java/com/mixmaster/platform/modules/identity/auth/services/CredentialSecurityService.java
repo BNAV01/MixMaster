@@ -14,7 +14,7 @@ public class CredentialSecurityService {
     private static final String DIGITS = "23456789";
     private static final String SPECIAL = "!@#$%^&*()-_=+?";
     private static final String ALL = LOWERCASE + UPPERCASE + DIGITS + SPECIAL;
-    private static final int MIN_PASSWORD_LENGTH = 12;
+    private static final int MIN_PASSWORD_LENGTH = 8;
     private static final int GENERATED_PASSWORD_LENGTH = 20;
 
     private final SecureRandom secureRandom = new SecureRandom();
@@ -34,7 +34,7 @@ public class CredentialSecurityService {
         }
 
         if (password.length() < MIN_PASSWORD_LENGTH || password.length() > 128) {
-            throw new IllegalArgumentException("Password must be between 12 and 128 characters");
+            throw new IllegalArgumentException("Password must be between 8 and 128 characters");
         }
 
         if (password.chars().noneMatch(Character::isLowerCase)) {

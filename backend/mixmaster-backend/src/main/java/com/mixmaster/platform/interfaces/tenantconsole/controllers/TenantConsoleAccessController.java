@@ -111,6 +111,32 @@ public class TenantConsoleAccessController {
         ));
     }
 
+    @PatchMapping("/staff/users/{userId}/access")
+    public TenantStaffUserResponse updateAccess(
+        @PathVariable String userId,
+        @Valid @RequestBody UpdateTenantStaffUserAccessRequest request
+    ) {
+        AuthenticatedActor actor = actorPermissionService.requireTenantPermission("tenant.staff.write");
+        actorPermissionService.requireTenantPermission("tenant.staff.assign");
+        return toStaffUserResponse(tenantStaffManagementService.updateStaffUserAccess(
+            actor.tenantId(),
+            actor.accessibleBranchIds(),
+            userId,
+            new TenantStaffManagementService.UpdateStaffUserAccessCommand(
+                request.status(),
+                request.passwordResetRequired(),
+                request.assignments().stream()
+                    .map(assignment -> new TenantStaffManagementService.CreateAssignmentCommand(
+                        assignment.roleCode(),
+                        assignment.scopeType(),
+                        assignment.brandIds(),
+                        assignment.branchIds()
+                    ))
+                    .toList()
+            )
+        ));
+    }
+
     @PostMapping("/staff/users/{userId}/reset-password")
     public TenantStaffUserResponse resetPassword(
         @PathVariable String userId,
@@ -132,6 +158,7 @@ public class TenantConsoleAccessController {
             staffUserView.email(),
             staffUserView.fullName(),
             staffUserView.status().name(),
+            staffUserView.bootstrapProtected(),
             staffUserView.passwordResetRequired(),
             staffUserView.lastLoginAt(),
             staffUserView.permissions(),

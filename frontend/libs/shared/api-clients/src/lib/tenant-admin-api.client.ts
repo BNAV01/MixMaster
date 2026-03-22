@@ -7,12 +7,14 @@ import {
   CreateTenantBranchRequestDto,
   CreateTenantBrandRequestDto,
   CreateTenantStaffUserRequestDto,
+  SaveTenantMenuWorkspaceRequestDto,
   ReplyTenantSupportTicketRequestDto,
   ResetTenantStaffUserPasswordRequestDto,
   TenantActorDto,
   TenantAuthSessionDto,
   TenantDashboardDto,
   TenantLoginRequestDto,
+  TenantMenuWorkspaceDto,
   TenantOrganizationDto,
   TenantRoleDto,
   TenantStaffUserDto,
@@ -20,6 +22,7 @@ import {
   TenantSupportTicketSummaryDto,
   ResolveTenantSupportTicketRequestDto,
   UpdateTenantBranchRequestDto,
+  UpdateTenantStaffUserAccessRequestDto,
   UpdateTenantStaffUserStatusRequestDto
 } from './tenant-admin-api.contracts';
 
@@ -58,6 +61,32 @@ export class TenantAdminApiClient {
     return this.httpClient.get<TenantOrganizationDto>(`${this.runtimeConfig.tenantAdminApiBaseUrl}/organization`);
   }
 
+  getMenuWorkspace(branchId?: string): Observable<TenantMenuWorkspaceDto> {
+    return this.httpClient.get<TenantMenuWorkspaceDto>(`${this.runtimeConfig.tenantAdminApiBaseUrl}/menu/workspace`, {
+      params: branchId ? { branchId } : {}
+    });
+  }
+
+  saveMenuWorkspace(payload: SaveTenantMenuWorkspaceRequestDto): Observable<TenantMenuWorkspaceDto> {
+    return this.httpClient.patch<TenantMenuWorkspaceDto>(`${this.runtimeConfig.tenantAdminApiBaseUrl}/menu/workspace`, payload);
+  }
+
+  publishMenuWorkspace(branchId?: string): Observable<TenantMenuWorkspaceDto> {
+    return this.httpClient.post<TenantMenuWorkspaceDto>(`${this.runtimeConfig.tenantAdminApiBaseUrl}/menu/workspace/publish`, {}, {
+      params: branchId ? { branchId } : {}
+    });
+  }
+
+  downloadMenuPdf(branchId?: string, versionStatus: 'DRAFT' | 'PUBLISHED' = 'DRAFT'): Observable<Blob> {
+    return this.httpClient.get(`${this.runtimeConfig.tenantAdminApiBaseUrl}/menu/workspace/pdf`, {
+      params: {
+        ...(branchId ? { branchId } : {}),
+        versionStatus
+      },
+      responseType: 'blob'
+    });
+  }
+
   listStaffUsers(): Observable<TenantStaffUserDto[]> {
     return this.httpClient.get<TenantStaffUserDto[]>(`${this.runtimeConfig.tenantAdminApiBaseUrl}/staff/users`);
   }
@@ -80,6 +109,10 @@ export class TenantAdminApiClient {
 
   updateStaffUserStatus(userId: string, payload: UpdateTenantStaffUserStatusRequestDto): Observable<TenantStaffUserDto> {
     return this.httpClient.patch<TenantStaffUserDto>(`${this.runtimeConfig.tenantAdminApiBaseUrl}/staff/users/${userId}/status`, payload);
+  }
+
+  updateStaffUserAccess(userId: string, payload: UpdateTenantStaffUserAccessRequestDto): Observable<TenantStaffUserDto> {
+    return this.httpClient.patch<TenantStaffUserDto>(`${this.runtimeConfig.tenantAdminApiBaseUrl}/staff/users/${userId}/access`, payload);
   }
 
   resetStaffUserPassword(userId: string, payload: ResetTenantStaffUserPasswordRequestDto): Observable<TenantStaffUserDto> {

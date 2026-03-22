@@ -88,6 +88,9 @@ export interface PublishedMenuDto {
   branchName: string;
   sections: PublishedMenuSectionDto[];
   updatedAt: string;
+  sourceType: 'STRUCTURED' | 'PDF';
+  recommendationMode: 'INTEGRATED' | 'CATALOG_ONLY';
+  hasPdf: boolean;
   branding?: PublishedMenuBrandingDto;
   highlights?: PublishedMenuHighlightDto[];
   notes?: string[];

@@ -54,6 +54,9 @@ export const DEMO_PUBLISHED_MENU: PublishedMenuDto = {
   branchId: 'branch-bellavista',
   branchName: 'Bellavista Night Bar',
   updatedAt: '2026-03-19T20:45:00Z',
+  sourceType: 'STRUCTURED',
+  recommendationMode: 'INTEGRATED',
+  hasPdf: false,
   branding: {
     venueName: 'Bellavista Night Bar',
     descriptor: 'Restobar nocturno con barra de autor, cocina de picoteo y recomendaciones contextuales en tiempo real.',
@@ -649,7 +652,7 @@ export function enrichPublishedMenuWithDemo(menu: PublishedMenuDto): PublishedMe
 
 export function enrichRecommendationsWithDemo(result: RecommendationResultDto): RecommendationResultDto {
   if (!result.items.length) {
-    return DEMO_RECOMMENDATIONS;
+    return result;
   }
 
   const demoItemsById = new Map(DEMO_RECOMMENDATIONS.items.map((item) => [item.productId, item]));

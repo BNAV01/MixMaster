@@ -160,6 +160,25 @@ public class SaasAdminTenantController {
         );
     }
 
+    @PostMapping("/tenants/{tenantId}/owner-credential/reset")
+    public PlatformTenantDetailResponse resetTenantOwnerCredential(@PathVariable String tenantId) {
+        actorPermissionService.requirePlatformPermission("platform.tenants.write");
+        TenantProvisioningService.TenantProvisioningResult credentialReset = tenantProvisioningService.resetTenantOwnerCredential(tenantId);
+        saasAdminTelemetryService.refreshTenant(tenantId);
+        return toDetailResponse(
+            saasAdminWorkspaceService.requireTenantDetail(
+                tenantId,
+                new SaasAdminWorkspaceService.BootstrapCredentialSnapshot(
+                    credentialReset.ownerEmail(),
+                    credentialReset.bootstrapPassword(),
+                    credentialReset.bootstrapPasswordGenerated(),
+                    credentialReset.passwordResetRequired()
+                )
+            ),
+            saasAdminTelemetryService.requireTenantTelemetry(tenantId)
+        );
+    }
+
     private PlatformTenantSummaryResponse toSummaryResponse(SaasAdminTelemetryService.TenantTelemetryView tenantSnapshot) {
         return new PlatformTenantSummaryResponse(
             tenantSnapshot.tenantId(),
@@ -234,6 +253,8 @@ public class SaasAdminTenantController {
             tenantDetailSnapshot.branches().stream()
                 .map(branch -> new PlatformTenantBranchResponse(
                     branch.branchId(),
+                    branch.brandId(),
+                    branch.brandName(),
                     branch.code(),
                     branch.name(),
                     branch.timezone(),

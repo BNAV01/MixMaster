@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/c
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { CONSUMER_NAVIGATION } from '@mixmaster/consumer/navigation';
 import { DEMO_PUBLISHED_MENU } from '../core/mocks/consumer-demo.data';
+import { ConsumerExperienceFacade } from '../core/facades/consumer-experience.facade';
 import { ConsumerSessionService } from '../core/services/consumer-session.service';
 
 @Component({
@@ -16,7 +17,7 @@ import { ConsumerSessionService } from '../core/services/consumer-session.servic
           <div class="relative grid gap-6 p-6 lg:p-8">
             <div class="grid gap-5 lg:grid-cols-[auto,1fr] lg:items-center">
               <div class="flex h-24 w-24 items-center justify-center rounded-[1.8rem] border border-accent/20 bg-surface-2/82 p-3 shadow-panel">
-                <img [src]="branding.logoUrl ?? ''" [alt]="activeVenueName()" class="h-full w-full object-contain" />
+                <img [src]="branding().logoUrl ?? ''" [alt]="activeVenueName()" class="h-full w-full object-contain" />
               </div>
 
               <div class="space-y-3">
@@ -24,7 +25,7 @@ import { ConsumerSessionService } from '../core/services/consumer-session.servic
                 <div class="space-y-3">
                   <h1 class="font-display text-5xl leading-[0.94] text-text sm:text-6xl">{{ activeVenueName() }}</h1>
                   <p class="max-w-2xl text-base leading-7 text-muted">
-                    {{ branding.descriptor }}
+                    {{ branding().descriptor }}
                   </p>
                 </div>
               </div>
@@ -33,20 +34,20 @@ import { ConsumerSessionService } from '../core/services/consumer-session.servic
             <div class="grid gap-3 sm:grid-cols-3">
               <article class="rounded-[1.3rem] border border-border/16 bg-surface-2/72 p-4">
                 <p class="text-xs uppercase tracking-[0.18em] text-muted">Horario</p>
-                <p class="mt-2 text-base font-semibold text-text">{{ branding.serviceHoursLabel }}</p>
+                <p class="mt-2 text-base font-semibold text-text">{{ branding().serviceHoursLabel }}</p>
               </article>
               <article class="rounded-[1.3rem] border border-border/16 bg-surface-2/72 p-4">
                 <p class="text-xs uppercase tracking-[0.18em] text-muted">Modo</p>
-                <p class="mt-2 text-base font-semibold text-text">{{ branding.serviceModeLabel }}</p>
+                <p class="mt-2 text-base font-semibold text-text">{{ branding().serviceModeLabel }}</p>
               </article>
               <article class="rounded-[1.3rem] border border-border/16 bg-surface-2/72 p-4">
                 <p class="text-xs uppercase tracking-[0.18em] text-muted">Direccion</p>
-                <p class="mt-2 text-base font-semibold text-text">{{ branding.address }}</p>
+                <p class="mt-2 text-base font-semibold text-text">{{ branding().address }}</p>
               </article>
             </div>
 
             <div class="flex flex-wrap gap-2.5">
-              @for (tag of branding.heroTags ?? []; track tag) {
+              @for (tag of branding().heroTags ?? []; track tag) {
                 <span class="rounded-pill border border-border/16 bg-surface/58 px-3 py-1.5 text-sm text-text">{{ tag }}</span>
               }
             </div>
@@ -58,11 +59,11 @@ import { ConsumerSessionService } from '../core/services/consumer-session.servic
             <div class="space-y-3">
               <p class="mm-eyebrow">Contexto activo</p>
               <h2 class="text-2xl font-semibold text-text">{{ activeTableLabel() }}</h2>
-              <p class="text-sm leading-6 text-muted">{{ branding.ambienceNote }}</p>
+              <p class="text-sm leading-6 text-muted">{{ branding().ambienceNote }}</p>
             </div>
 
             <div class="grid gap-3">
-              @for (highlight of highlights; track highlight.id) {
+              @for (highlight of highlights(); track highlight.id) {
                 <article class="rounded-[1.3rem] border border-border/16 bg-surface-2/72 p-4">
                   <p class="text-sm font-semibold text-text">{{ highlight.title }}</p>
                   <p class="mt-2 text-sm leading-6 text-muted">{{ highlight.description }}</p>
@@ -86,7 +87,7 @@ import { ConsumerSessionService } from '../core/services/consumer-session.servic
           </div>
 
           <div class="flex flex-wrap gap-2">
-            @for (link of socialLinks; track link.id) {
+            @for (link of socialLinks(); track link.id) {
               <a
                 [href]="link.url"
                 target="_blank"
@@ -233,18 +234,26 @@ import { ConsumerSessionService } from '../core/services/consumer-session.servic
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PublicShellComponent {
+  private readonly experienceFacade = inject(ConsumerExperienceFacade);
   private readonly consumerSessionService = inject(ConsumerSessionService);
 
   protected readonly navigation = CONSUMER_NAVIGATION;
-  protected readonly branding = DEMO_PUBLISHED_MENU.branding!;
-  protected readonly highlights = DEMO_PUBLISHED_MENU.highlights ?? [];
-  protected readonly socialLinks = this.branding.socialLinks ?? [];
+  protected readonly branding = computed(() => ({
+    ...DEMO_PUBLISHED_MENU.branding!,
+    ...(this.experienceFacade.publishedMenu()?.branding ?? {})
+  }));
+  protected readonly highlights = computed(() =>
+    this.experienceFacade.publishedMenu()?.highlights?.length
+      ? this.experienceFacade.publishedMenu()?.highlights ?? []
+      : DEMO_PUBLISHED_MENU.highlights ?? []
+  );
+  protected readonly socialLinks = computed(() => this.branding().socialLinks ?? []);
 
   protected readonly activeVenueName = computed(() =>
-    this.consumerSessionService.activeBranchName() ?? this.branding.venueName
+    this.consumerSessionService.activeBranchName() ?? this.experienceFacade.qrContext()?.branchName ?? this.branding().venueName
   );
 
   protected readonly activeTableLabel = computed(() =>
-    this.consumerSessionService.activeTableLabel() ?? 'Barra libre'
+    this.consumerSessionService.activeTableLabel() ?? this.experienceFacade.qrContext()?.tableLabel ?? 'Barra libre'
   );
 }

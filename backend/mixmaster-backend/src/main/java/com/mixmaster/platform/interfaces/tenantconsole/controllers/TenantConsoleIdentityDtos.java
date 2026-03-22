@@ -103,6 +103,7 @@ record TenantStaffUserResponse(
     String email,
     String fullName,
     String status,
+    boolean bootstrapProtected,
     boolean passwordResetRequired,
     OffsetDateTime lastLoginAt,
     Set<String> permissions,
@@ -165,6 +166,13 @@ record CreateTenantStaffUserRequest(
 
 record UpdateTenantStaffUserStatusRequest(
     @NotNull StaffUserStatus status
+) {
+}
+
+record UpdateTenantStaffUserAccessRequest(
+    @NotNull StaffUserStatus status,
+    boolean passwordResetRequired,
+    @NotEmpty List<@Valid CreateTenantStaffAssignmentRequest> assignments
 ) {
 }
 

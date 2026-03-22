@@ -4,6 +4,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
   PublishedMenuItemDto,
   PublishedMenuSectionDto,
+  PublicApiClient,
   RecommendationItemDto
 } from '@mixmaster/shared/api-clients';
 import { BenefitCardComponent, BenefitCardViewModel } from '@mixmaster/consumer/loyalty';
@@ -35,6 +36,7 @@ import {
 import { ConsumerExperienceFacade } from '../../../core/facades/consumer-experience.facade';
 import { ConsumerAuthService } from '../../../core/services/consumer-auth.service';
 import { ConsumerSessionService } from '../../../core/services/consumer-session.service';
+import { take } from 'rxjs';
 
 interface MenuSubsectionDetailViewModel {
   id: string;
@@ -233,6 +235,134 @@ function sortByDisplayOrder<T extends { displayOrder?: number }>(items: Readonly
         @case ('menu') {
           @if (experienceFacade.menuStatus() === 'loading') {
             <mm-loading-skeleton [cards]="4" />
+          } @else if (!publishedMenu()) {
+            <mm-empty-state
+              title="Carta aun no publicada"
+              description="Esta sucursal todavia no tiene una carta visible para el consumidor. Publicala desde tenant o SaaS para abrir este flujo."
+            />
+          } @else if (isCatalogOnlyMenu()) {
+            <section class="mm-surface overflow-hidden">
+              <div class="grid gap-6 xl:grid-cols-[1.02fr,0.98fr]">
+                <div class="space-y-5 p-6 lg:p-7">
+                  <div class="space-y-3">
+                    <p class="mm-eyebrow">Carta PDF + catalogo digital</p>
+                    <h2 class="font-display text-4xl leading-[0.96] text-text sm:text-5xl">{{ menuBranding().venueName }}</h2>
+                    <p class="max-w-2xl text-sm leading-7 text-muted">{{ menuBranding().descriptor }}</p>
+                  </div>
+
+                  <div class="flex flex-wrap gap-2.5">
+                    @for (tag of menuBranding().heroTags ?? []; track tag) {
+                      <span class="rounded-pill border border-border/16 bg-surface-2/72 px-3 py-1.5 text-sm text-text">{{ tag }}</span>
+                    }
+                  </div>
+
+                  <div class="grid gap-3 sm:grid-cols-3">
+                    <article class="rounded-[1.2rem] border border-border/15 bg-surface-2/72 p-4">
+                      <p class="text-sm text-muted">Actualizada</p>
+                      <p class="mt-2 text-lg font-semibold text-text">{{ menuUpdatedLabel() }}</p>
+                    </article>
+                    <article class="rounded-[1.2rem] border border-border/15 bg-surface-2/72 p-4">
+                      <p class="text-sm text-muted">Categorias digitales</p>
+                      <p class="mt-2 text-lg font-semibold text-text">{{ menuSectionDetails().length }}</p>
+                    </article>
+                    <article class="rounded-[1.2rem] border border-border/15 bg-surface-2/72 p-4">
+                      <p class="text-sm text-muted">Catalogo activo</p>
+                      <p class="mt-2 text-lg font-semibold text-text">{{ allMenuProducts().length }} productos</p>
+                    </article>
+                  </div>
+
+                  <div class="flex flex-wrap gap-3">
+                    @if (hasPublishedPdf()) {
+                      <button type="button" class="mm-button-primary" (click)="previewPublishedMenuPdf()">Abrir carta PDF</button>
+                    }
+                    <a routerLink="/experience/recommendations" class="mm-button-secondary">Pedir recomendaciones</a>
+                  </div>
+                </div>
+
+                <div class="relative min-h-[320px] overflow-hidden xl:min-h-full">
+                  <img [src]="menuBranding().heroImageUrl ?? ''" [alt]="menuBranding().venueName" class="absolute inset-0 h-full w-full object-cover" />
+                  <div class="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent"></div>
+                  <div class="relative flex h-full flex-col justify-end gap-3 p-6 lg:p-7">
+                    <span class="rounded-pill bg-warning/18 px-3 py-1 text-xs uppercase tracking-[0.18em] text-warning">
+                      Catalogo operativo
+                    </span>
+                    <h3 class="text-3xl font-semibold text-text">La carta completa vive en PDF y aqui queda el catalogo digital para pedir</h3>
+                    <p class="max-w-xl text-sm leading-6 text-muted">
+                      Este modo deja visible el PDF oficial del local y, al mismo tiempo, mantiene un catalogo de cocteles y productos conectado al motor de recomendaciones.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            @if (menuHighlights().length) {
+              <div class="grid gap-4 xl:grid-cols-3">
+                @for (highlight of menuHighlights(); track highlight.id) {
+                  <article class="mm-surface space-y-3 p-5">
+                    <p class="mm-eyebrow">Modo PDF</p>
+                    <h3 class="text-2xl font-semibold text-text">{{ highlight.title }}</h3>
+                    <p class="text-sm leading-6 text-muted">{{ highlight.description }}</p>
+                  </article>
+                }
+              </div>
+            }
+
+            <div class="grid gap-5 xl:grid-cols-[0.96fr,1.04fr]">
+              <section class="mm-surface space-y-5 p-6">
+                <div class="space-y-2">
+                  <p class="mm-eyebrow">Carta oficial</p>
+                  <h3 class="text-3xl font-semibold text-text">El PDF manda el formato; el catalogo digital manda la operacion</h3>
+                  <p class="text-sm leading-6 text-muted">
+                    Usa el PDF como referencia visual completa y este catalogo para pedir rapido, guardar favoritos y recibir recomendaciones sobre lo que el local cargó en MixMaster.
+                  </p>
+                </div>
+
+                <div class="space-y-3">
+                  @for (note of menuNotes(); track note) {
+                    <article class="rounded-[1.2rem] border border-border/15 bg-surface-2/72 p-4">
+                      <p class="text-sm leading-6 text-muted">{{ note }}</p>
+                    </article>
+                  }
+                </div>
+              </section>
+
+              <section class="mm-surface space-y-5 p-6">
+                <div class="space-y-2">
+                  <p class="mm-eyebrow">Categorias del catalogo</p>
+                  <h3 class="text-3xl font-semibold text-text">Saltos rapidos para pedir desde el flujo digital</h3>
+                  <p class="text-sm leading-6 text-muted">
+                    Las categorias publicadas por el local siguen visibles aqui para ordenar el catalogo que alimenta recomendaciones y seleccion.
+                  </p>
+                </div>
+
+                <mm-menu-section-list [sections]="menuSections()" (sectionSelected)="scrollToMenuSection($event)" />
+              </section>
+            </div>
+
+            @for (section of menuSectionDetails(); track section.id) {
+              <section [attr.id]="section.id" class="space-y-5">
+                <article class="mm-surface space-y-3 p-6">
+                  <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                    <div class="space-y-2">
+                      <p class="mm-eyebrow">Catalogo digital</p>
+                      <h3 class="text-4xl font-semibold text-text">{{ section.title }}</h3>
+                      @if (section.description) {
+                        <p class="max-w-3xl text-sm leading-7 text-muted">{{ section.description }}</p>
+                      }
+                    </div>
+                    <span class="rounded-pill border border-border/18 bg-surface-2/74 px-4 py-2 text-sm text-text">
+                      {{ section.itemCount }} items
+                    </span>
+                  </div>
+                </article>
+
+                <div class="mm-card-grid">
+                  @for (item of catalogSectionProducts(section); track item.id) {
+                    <mm-product-card [product]="item" (selected)="handleProductSelection($event)" />
+                  }
+                </div>
+              </section>
+            }
           } @else {
             <section class="mm-surface overflow-hidden">
               <div class="grid gap-6 xl:grid-cols-[1.08fr,0.92fr]">
@@ -830,6 +960,7 @@ export class ConsumerRoutePageComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly document = inject(DOCUMENT);
+  private readonly publicApiClient = inject(PublicApiClient);
 
   protected readonly experienceFacade = inject(ConsumerExperienceFacade);
   protected readonly consumerSessionService = inject(ConsumerSessionService);
@@ -852,20 +983,27 @@ export class ConsumerRoutePageComponent {
     }))
   );
 
-  protected readonly menuBranding = computed(() =>
-    this.experienceFacade.publishedMenu()?.branding ?? DEMO_PUBLISHED_MENU.branding!
-  );
+  protected readonly publishedMenu = computed(() => this.experienceFacade.publishedMenu());
+
+  protected readonly menuBranding = computed(() => ({
+    ...DEMO_PUBLISHED_MENU.branding!,
+    ...(this.publishedMenu()?.branding ?? {})
+  }));
 
   protected readonly menuNotes = computed(() =>
-    this.experienceFacade.publishedMenu()?.notes ?? DEMO_PUBLISHED_MENU.notes ?? []
+    this.publishedMenu()?.notes?.length
+      ? this.publishedMenu()?.notes ?? []
+      : DEMO_PUBLISHED_MENU.notes ?? []
   );
 
   protected readonly menuHighlights = computed(() =>
-    this.experienceFacade.publishedMenu()?.highlights ?? DEMO_PUBLISHED_MENU.highlights ?? []
+    this.publishedMenu()?.highlights?.length
+      ? this.publishedMenu()?.highlights ?? []
+      : DEMO_PUBLISHED_MENU.highlights ?? []
   );
 
   protected readonly menuSectionDetails = computed<MenuSectionDetailViewModel[]>(() =>
-    sortByDisplayOrder(this.experienceFacade.publishedMenu()?.sections ?? []).map((section) => this.toMenuSectionDetail(section))
+    sortByDisplayOrder(this.publishedMenu()?.sections ?? []).map((section) => this.toMenuSectionDetail(section))
   );
 
   protected readonly menuSections = computed<MenuSectionViewModel[]>(() =>
@@ -881,6 +1019,12 @@ export class ConsumerRoutePageComponent {
   protected readonly allMenuProducts = computed<ProductCardViewModel[]>(() =>
     this.menuSectionDetails().flatMap((section) => section.subsections.flatMap((subsection) => subsection.items))
   );
+
+  protected readonly isCatalogOnlyMenu = computed(() =>
+    this.publishedMenu()?.recommendationMode === 'CATALOG_ONLY' || this.publishedMenu()?.sourceType === 'PDF'
+  );
+
+  protected readonly hasPublishedPdf = computed(() => this.publishedMenu()?.hasPdf === true);
 
   protected readonly recommendationCards = computed<RecommendationCardViewModel[]>(() =>
     (this.experienceFacade.recommendations()?.items ?? []).map((item) => this.toRecommendationCard(item))
@@ -943,7 +1087,7 @@ export class ConsumerRoutePageComponent {
   );
 
   protected readonly menuPreviewSections = computed<MenuSectionViewModel[]>(() =>
-    DEMO_PUBLISHED_MENU.sections.slice(0, 3).map((section) => ({
+    (this.publishedMenu()?.sections?.length ? this.publishedMenu()?.sections ?? [] : DEMO_PUBLISHED_MENU.sections).slice(0, 3).map((section) => ({
       id: section.id,
       title: section.title,
       subtitle: section.subtitle,
@@ -987,6 +1131,9 @@ export class ConsumerRoutePageComponent {
 
     switch (this.content.pageId) {
       case 'menu':
+      case 'recommendations':
+      case 'explore':
+      case 'pairings':
       case 'favorites':
       case 'history':
       case 'account-favorites':
@@ -1105,6 +1252,25 @@ export class ConsumerRoutePageComponent {
 
   protected scrollToMenuSection(sectionId: string): void {
     this.document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  protected previewPublishedMenuPdf(): void {
+    const qrToken = this.consumerSessionService.activeQrCode();
+    if (!qrToken) {
+      return;
+    }
+
+    this.publicApiClient.getPublishedMenuPdf(qrToken).pipe(
+      take(1)
+    ).subscribe((blob) => {
+      const objectUrl = URL.createObjectURL(blob);
+      this.document.defaultView?.open(objectUrl, '_blank', 'noopener');
+      this.document.defaultView?.setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
+    });
+  }
+
+  protected catalogSectionProducts(section: MenuSectionDetailViewModel): ProductCardViewModel[] {
+    return section.subsections.flatMap((subsection) => subsection.items);
   }
 
   protected simulateConsumerLogin(): void {

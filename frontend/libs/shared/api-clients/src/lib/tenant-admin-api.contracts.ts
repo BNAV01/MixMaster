@@ -1,5 +1,6 @@
 export type StaffAccessScopeTypeDto = 'TENANT' | 'BRAND' | 'BRANCH';
 export type StaffUserStatusDto = 'INVITED' | 'ACTIVE' | 'LOCKED' | 'DISABLED';
+export type MenuSourceTypeDto = 'STRUCTURED' | 'PDF';
 export type TenantSupportTicketPriorityDto = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
 export type TenantSupportTicketStatusDto = 'OPEN' | 'WAITING_ON_PLATFORM' | 'WAITING_ON_TENANT' | 'RESOLVED' | 'CLOSED';
 
@@ -78,6 +79,7 @@ export interface TenantStaffUserDto {
   email: string;
   fullName: string;
   status: StaffUserStatusDto;
+  bootstrapProtected: boolean;
   passwordResetRequired: boolean;
   lastLoginAt?: string | null;
   permissions: string[];
@@ -116,6 +118,59 @@ export interface TenantOrganizationDto {
   brands: TenantOrganizationBrandDto[];
 }
 
+export interface TenantMenuItemDto {
+  categoryName: string;
+  name: string;
+  description?: string | null;
+  price: number;
+  currencyCode: string;
+  productType: string;
+  featured: boolean;
+}
+
+export interface TenantMenuVersionDto {
+  versionId: string;
+  menuName: string;
+  versionNumber: number;
+  status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
+  sourceType: MenuSourceTypeDto;
+  recommendationMode: 'INTEGRATED' | 'CATALOG_ONLY';
+  description?: string | null;
+  notes: string[];
+  items: TenantMenuItemDto[];
+  pdfFileName?: string | null;
+  pdfContentType?: string | null;
+  pdfSizeBytes?: number | null;
+  publishedAt?: string | null;
+  updatedAt: string;
+}
+
+export interface TenantMenuWorkspaceDto {
+  menuId?: string | null;
+  branchId: string;
+  branchName: string;
+  brandId: string;
+  brandName: string;
+  draftVersion?: TenantMenuVersionDto | null;
+  publishedVersion?: TenantMenuVersionDto | null;
+}
+
+export interface TenantMenuPdfUploadRequestDto {
+  fileName: string;
+  contentType: string;
+  base64: string;
+}
+
+export interface SaveTenantMenuWorkspaceRequestDto {
+  branchId?: string | null;
+  menuName: string;
+  menuDescription?: string | null;
+  sourceType: MenuSourceTypeDto;
+  notes: string[];
+  items: TenantMenuItemDto[];
+  pdfUpload?: TenantMenuPdfUploadRequestDto | null;
+}
+
 export interface CreateTenantStaffAssignmentRequestDto {
   roleCode: string;
   scopeType: StaffAccessScopeTypeDto;
@@ -134,6 +189,12 @@ export interface CreateTenantStaffUserRequestDto {
 
 export interface UpdateTenantStaffUserStatusRequestDto {
   status: StaffUserStatusDto;
+}
+
+export interface UpdateTenantStaffUserAccessRequestDto {
+  status: StaffUserStatusDto;
+  passwordResetRequired: boolean;
+  assignments: CreateTenantStaffAssignmentRequestDto[];
 }
 
 export interface ResetTenantStaffUserPasswordRequestDto {

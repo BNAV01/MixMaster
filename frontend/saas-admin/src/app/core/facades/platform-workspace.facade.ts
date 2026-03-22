@@ -5,11 +5,17 @@ import {
   CreatePlatformSupportTicketReplyRequestDto,
   PlatformAdminApiClient,
   PlatformAccountProfileDto,
+  PlatformTenantMenuWorkspaceDto,
+  PlatformTenantRoleDto,
+  PlatformTenantStaffUserDto,
   PlatformSupportTicketDetailDto,
   PlatformSupportTicketSummaryDto,
   PlatformWorkspaceDto,
+  ResetPlatformTenantStaffPasswordRequestDto,
+  SavePlatformTenantMenuWorkspaceRequestDto,
   TenantDetailDto,
   TenantSummaryDto,
+  UpdatePlatformTenantStaffAccessRequestDto,
   UpdatePlatformSupportTicketRequestDto,
   UpdateTenantProfileRequestDto
 } from '@mixmaster/shared/api-clients';
@@ -20,10 +26,15 @@ import { finalize, take } from 'rxjs';
 export class PlatformWorkspaceFacade {
   private tenantDetailRequestId: string | null = null;
   private supportTicketRequestId: string | null = null;
+  private tenantStaffRolesRequestId: string | null = null;
+  private tenantStaffUsersRequestId: string | null = null;
 
   readonly workspace = signal<PlatformWorkspaceDto | null>(null);
   readonly tenants = signal<TenantSummaryDto[]>([]);
   readonly tenantDetail = signal<TenantDetailDto | null>(null);
+  readonly tenantMenuWorkspace = signal<PlatformTenantMenuWorkspaceDto | null>(null);
+  readonly tenantStaffRoles = signal<PlatformTenantRoleDto[]>([]);
+  readonly tenantStaffUsers = signal<PlatformTenantStaffUserDto[]>([]);
   readonly lastProvisionedTenant = signal<TenantDetailDto | null>(null);
   readonly accountProfile = signal<PlatformAccountProfileDto | null>(null);
   readonly supportTickets = signal<PlatformSupportTicketSummaryDto[]>([]);
@@ -31,6 +42,10 @@ export class PlatformWorkspaceFacade {
   readonly workspaceStatus = signal<AsyncStatus>('idle');
   readonly tenantsStatus = signal<AsyncStatus>('idle');
   readonly detailStatus = signal<AsyncStatus>('idle');
+  readonly tenantMenuStatus = signal<AsyncStatus>('idle');
+  readonly tenantStaffRolesStatus = signal<AsyncStatus>('idle');
+  readonly tenantStaffUsersStatus = signal<AsyncStatus>('idle');
+  readonly tenantStaffSaveStatus = signal<AsyncStatus>('idle');
   readonly createStatus = signal<AsyncStatus>('idle');
   readonly updateStatus = signal<AsyncStatus>('idle');
   readonly accountStatus = signal<AsyncStatus>('idle');
@@ -144,6 +159,158 @@ export class PlatformWorkspaceFacade {
       },
       error: (error: NormalizedApiError) => {
         this.detailStatus.set('error');
+        this.errorMessage.set(error.message);
+      }
+    });
+  }
+
+  resetTenantOwnerCredential(tenantId: string): void {
+    this.detailStatus.set('loading');
+    this.errorMessage.set(null);
+
+    this.platformAdminApiClient.resetTenantOwnerCredential(tenantId).pipe(take(1)).subscribe({
+      next: (tenantDetail) => {
+        this.tenantDetail.set(tenantDetail);
+        this.syncTenantSummary(tenantDetail);
+        this.detailStatus.set('success');
+      },
+      error: (error: NormalizedApiError) => {
+        this.detailStatus.set('error');
+        this.errorMessage.set(error.message);
+      }
+    });
+  }
+
+  loadTenantMenuWorkspace(tenantId: string, branchId: string): void {
+    this.tenantMenuStatus.set('loading');
+    this.errorMessage.set(null);
+
+    this.platformAdminApiClient.getTenantMenuWorkspace(tenantId, branchId).pipe(take(1)).subscribe({
+      next: (menuWorkspace) => {
+        this.tenantMenuWorkspace.set(menuWorkspace);
+        this.tenantMenuStatus.set('success');
+      },
+      error: (error: NormalizedApiError) => {
+        this.tenantMenuWorkspace.set(null);
+        this.tenantMenuStatus.set('error');
+        this.errorMessage.set(error.message);
+      }
+    });
+  }
+
+  saveTenantMenuWorkspace(tenantId: string, payload: SavePlatformTenantMenuWorkspaceRequestDto): void {
+    this.updateStatus.set('loading');
+    this.errorMessage.set(null);
+
+    this.platformAdminApiClient.saveTenantMenuWorkspace(tenantId, payload).pipe(take(1)).subscribe({
+      next: (menuWorkspace) => {
+        this.tenantMenuWorkspace.set(menuWorkspace);
+        this.tenantMenuStatus.set('success');
+        this.updateStatus.set('success');
+      },
+      error: (error: NormalizedApiError) => {
+        this.updateStatus.set('error');
+        this.errorMessage.set(error.message);
+      }
+    });
+  }
+
+  publishTenantMenuWorkspace(tenantId: string, branchId: string): void {
+    this.updateStatus.set('loading');
+    this.errorMessage.set(null);
+
+    this.platformAdminApiClient.publishTenantMenuWorkspace(tenantId, branchId).pipe(take(1)).subscribe({
+      next: (menuWorkspace) => {
+        this.tenantMenuWorkspace.set(menuWorkspace);
+        this.tenantMenuStatus.set('success');
+        this.updateStatus.set('success');
+      },
+      error: (error: NormalizedApiError) => {
+        this.updateStatus.set('error');
+        this.errorMessage.set(error.message);
+      }
+    });
+  }
+
+  loadTenantStaffRoles(tenantId: string, force = false): void {
+    if (!force && this.tenantStaffRolesStatus() !== 'error' && this.tenantStaffRolesRequestId === tenantId) {
+      return;
+    }
+
+    this.tenantStaffRolesRequestId = tenantId;
+    this.tenantStaffRolesStatus.set('loading');
+    this.errorMessage.set(null);
+
+    this.platformAdminApiClient.listTenantStaffRoles(tenantId).pipe(take(1)).subscribe({
+      next: (roles) => {
+        this.tenantStaffRoles.set(roles);
+        this.tenantStaffRolesStatus.set('success');
+      },
+      error: (error: NormalizedApiError) => {
+        this.tenantStaffRoles.set([]);
+        this.tenantStaffRolesStatus.set('error');
+        this.errorMessage.set(error.message);
+      }
+    });
+  }
+
+  loadTenantStaffUsers(tenantId: string, force = false): void {
+    if (!force && this.tenantStaffUsersStatus() !== 'error' && this.tenantStaffUsersRequestId === tenantId) {
+      return;
+    }
+
+    this.tenantStaffUsersRequestId = tenantId;
+    this.tenantStaffUsersStatus.set('loading');
+    this.errorMessage.set(null);
+
+    this.platformAdminApiClient.listTenantStaffUsers(tenantId).pipe(take(1)).subscribe({
+      next: (staffUsers) => {
+        this.tenantStaffUsers.set(staffUsers);
+        this.tenantStaffUsersStatus.set('success');
+      },
+      error: (error: NormalizedApiError) => {
+        this.tenantStaffUsers.set([]);
+        this.tenantStaffUsersStatus.set('error');
+        this.errorMessage.set(error.message);
+      }
+    });
+  }
+
+  updateTenantStaffUserAccess(
+    tenantId: string,
+    userId: string,
+    payload: UpdatePlatformTenantStaffAccessRequestDto
+  ): void {
+    this.tenantStaffSaveStatus.set('loading');
+    this.errorMessage.set(null);
+
+    this.platformAdminApiClient.updateTenantStaffUserAccess(tenantId, userId, payload).pipe(take(1)).subscribe({
+      next: (staffUser) => {
+        this.syncTenantStaffUser(staffUser);
+        this.tenantStaffSaveStatus.set('success');
+      },
+      error: (error: NormalizedApiError) => {
+        this.tenantStaffSaveStatus.set('error');
+        this.errorMessage.set(error.message);
+      }
+    });
+  }
+
+  resetTenantStaffUserPassword(
+    tenantId: string,
+    userId: string,
+    payload: ResetPlatformTenantStaffPasswordRequestDto
+  ): void {
+    this.tenantStaffSaveStatus.set('loading');
+    this.errorMessage.set(null);
+
+    this.platformAdminApiClient.resetTenantStaffUserPassword(tenantId, userId, payload).pipe(take(1)).subscribe({
+      next: (staffUser) => {
+        this.syncTenantStaffUser(staffUser);
+        this.tenantStaffSaveStatus.set('success');
+      },
+      error: (error: NormalizedApiError) => {
+        this.tenantStaffSaveStatus.set('error');
         this.errorMessage.set(error.message);
       }
     });
@@ -350,6 +517,16 @@ export class PlatformWorkspaceFacade {
         ? tickets.map((ticket) => ticket.ticketId === summary.ticketId ? summary : ticket)
         : [summary, ...tickets];
       return [...next].sort((left, right) => right.lastMessageAt.localeCompare(left.lastMessageAt));
+    });
+  }
+
+  private syncTenantStaffUser(staffUser: PlatformTenantStaffUserDto): void {
+    this.tenantStaffUsers.update((staffUsers) => {
+      const exists = staffUsers.some((currentUser) => currentUser.userId === staffUser.userId);
+      const next = exists
+        ? staffUsers.map((currentUser) => currentUser.userId === staffUser.userId ? staffUser : currentUser)
+        : [...staffUsers, staffUser];
+      return [...next].sort((left, right) => left.fullName.localeCompare(right.fullName));
     });
   }
 }

@@ -18,4 +18,11 @@ export class PublicApiClient {
       params: { qrToken }
     });
   }
+
+  getPublishedMenuPdf(qrToken: string): Observable<Blob> {
+    return this.httpClient.get(`${this.runtimeConfig.publicApiBaseUrl}/menus/published/pdf`, {
+      params: { qrToken },
+      responseType: 'blob'
+    });
+  }
 }

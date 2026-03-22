@@ -8,6 +8,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
@@ -43,9 +44,30 @@ public class MenuVersion extends TenantScopedEntity {
     @Column(name = "status", nullable = false, length = 40)
     private MenuVersionStatus status;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "source_type", nullable = false, length = 40)
+    private MenuContentSourceType sourceType = MenuContentSourceType.STRUCTURED;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "base_menu_version_id")
     private MenuVersion baseMenuVersion;
+
+    @Lob
+    @Column(name = "definition_json", columnDefinition = "LONGTEXT")
+    private String definitionJson;
+
+    @Column(name = "pdf_file_name", length = 255)
+    private String pdfFileName;
+
+    @Column(name = "pdf_content_type", length = 120)
+    private String pdfContentType;
+
+    @Column(name = "pdf_size_bytes")
+    private Long pdfSizeBytes;
+
+    @Lob
+    @Column(name = "pdf_bytes", columnDefinition = "LONGBLOB")
+    private byte[] pdfBytes;
 
     @Column(name = "checksum", length = 128)
     private String checksum;

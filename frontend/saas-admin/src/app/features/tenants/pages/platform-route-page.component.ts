@@ -5,10 +5,17 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { PLATFORM_NAVIGATION } from '@mixmaster/platform/navigation';
 import {
   PlatformAdminApiClient,
+  PlatformMenuSourceTypeDto,
+  PlatformStaffAccessScopeDto,
+  PlatformStaffUserStatusDto,
   PlatformSubscriptionStatusDto,
   PlatformSupportTicketPriorityDto,
   PlatformSupportTicketStatusDto,
+  PlatformTenantMenuItemDto,
+  PlatformTenantMenuVersionDto,
   PlatformTenantOnboardingStageDto,
+  PlatformTenantStaffAssignmentDto,
+  PlatformTenantStaffUserDto,
   PlatformTenantStatusDto,
   TenantDetailDto,
   TenantSummaryDto
@@ -65,6 +72,23 @@ type TenantDetailForm = {
 type TenantSortKey = 'name' | 'readiness' | 'tickets' | 'staff' | 'snapshot' | 'trial';
 type SupportStatusFilter = 'ALL' | PlatformSupportTicketStatusDto;
 type SupportPriorityFilter = 'ALL' | PlatformSupportTicketPriorityDto;
+type PlatformStaffAssignmentForm = {
+  id: string;
+  roleCode: string;
+  scopeType: PlatformStaffAccessScopeDto;
+  brandIds: string[];
+  branchIds: string[];
+};
+type PlatformMenuItemForm = {
+  id: string;
+  categoryName: string;
+  name: string;
+  description: string;
+  price: string;
+  currencyCode: string;
+  productType: string;
+  featured: boolean;
+};
 
 @Component({
   selector: 'app-platform-route-page',
@@ -442,6 +466,7 @@ type SupportPriorityFilter = 'ALL' | PlatformSupportTicketPriorityDto;
                     </div>
                     <div class="flex flex-wrap gap-3">
                       <button type="button" class="mm-button-secondary" (click)="refreshTenant(workspaceFacade.tenantDetail()?.tenantId || '')">Actualizar tenant</button>
+                      <button type="button" class="mm-button-secondary" (click)="resetOwnerCredential()">Reemitir credencial owner</button>
                       <button type="button" class="mm-button-secondary" (click)="downloadTenantReadiness('xlsx')">Pack SII XLSX</button>
                       <button type="button" class="mm-button-secondary" (click)="downloadTenantReadiness('pdf')">Pack SII PDF</button>
                       <button type="button" class="mm-button-secondary" (click)="downloadTenantF29('xlsx')">F29 XLSX</button>
@@ -480,6 +505,9 @@ type SupportPriorityFilter = 'ALL' | PlatformSupportTicketPriorityDto;
                     <p class="rounded-2xl border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-text">
                       Credencial bootstrap vigente: {{ workspaceFacade.tenantDetail()?.bootstrapCredential?.email }} /
                       <strong>{{ workspaceFacade.tenantDetail()?.bootstrapCredential?.temporaryPassword }}</strong>
+                    </p>
+                    <p class="text-sm text-muted">
+                      Usa esta clave solo para recuperación. El owner quedará obligado a cambiarla en el próximo ingreso.
                     </p>
                   }
 
@@ -635,6 +663,445 @@ type SupportPriorityFilter = 'ALL' | PlatformSupportTicketPriorityDto;
                     {{ workspaceFacade.updateStatus() === 'loading' ? 'Guardando...' : 'Guardar cambios' }}
                   </button>
                 </form>
+
+                <section class="grid gap-5 xl:grid-cols-[minmax(0,26rem),1fr]">
+                  <article class="mm-surface space-y-4 p-5">
+                    <div class="space-y-2">
+                      <p class="mm-eyebrow">Carta del tenant</p>
+                      <h3 class="text-2xl font-semibold text-text">Crear o intervenir carta desde SaaS</h3>
+                      <p class="text-sm leading-6 text-muted">
+                        Puedes construir la carta integrada o subir un PDF y dejar el catálogo de cocteles por separado para el flujo de pedido y recomendación.
+                      </p>
+                    </div>
+
+                    <label class="grid gap-2">
+                      <span class="text-sm font-medium text-text">Sucursal objetivo</span>
+                      <select class="mm-input" name="selectedTenantMenuBranchId" [ngModel]="selectedTenantMenuBranchId" (ngModelChange)="changeTenantMenuBranch($event)">
+                        @for (branch of workspaceFacade.tenantDetail()?.branches ?? []; track branch.branchId) {
+                          <option [value]="branch.branchId">{{ branch.name }}</option>
+                        }
+                      </select>
+                    </label>
+
+                    <label class="grid gap-2">
+                      <span class="text-sm font-medium text-text">Tipo de carta</span>
+                      <select class="mm-input" name="tenantMenuSourceType" [(ngModel)]="tenantMenuSourceType" (ngModelChange)="tenantMenuFormMessage.set(null)">
+                        @for (sourceType of menuSourceTypes; track sourceType) {
+                          <option [value]="sourceType">{{ sourceType === 'STRUCTURED' ? 'Carta integrada' : 'Carta PDF + catálogo' }}</option>
+                        }
+                      </select>
+                    </label>
+
+                    <label class="grid gap-2">
+                      <span class="text-sm font-medium text-text">Nombre de la carta</span>
+                      <input class="mm-input" type="text" name="tenantMenuName" [(ngModel)]="tenantMenuName" (ngModelChange)="tenantMenuFormMessage.set(null)" />
+                    </label>
+
+                    <label class="grid gap-2">
+                      <span class="text-sm font-medium text-text">Descripción general</span>
+                      <textarea class="mm-input min-h-24" name="tenantMenuDescription" [(ngModel)]="tenantMenuDescription" (ngModelChange)="tenantMenuFormMessage.set(null)"></textarea>
+                    </label>
+
+                    <label class="grid gap-2">
+                      <span class="text-sm font-medium text-text">Notas de servicio</span>
+                      <textarea class="mm-input min-h-24" name="tenantMenuNotesText" [(ngModel)]="tenantMenuNotesText" (ngModelChange)="tenantMenuFormMessage.set(null)"></textarea>
+                      <span class="text-xs text-muted">Una nota por línea.</span>
+                    </label>
+
+                    @if (tenantMenuSourceType === 'PDF') {
+                      <div class="space-y-3 rounded-3xl border border-line/70 bg-panel/70 p-4">
+                        <p class="text-sm text-muted">En modo PDF, la experiencia pública usa el documento y deja el catálogo de cocteles para el motor de recomendación y pedido.</p>
+                        <input type="file" accept="application/pdf" (change)="onTenantMenuPdfSelected($event)" />
+                        @if (tenantMenuPdfName) {
+                          <p class="text-sm text-muted">Archivo actual: {{ tenantMenuPdfName }}</p>
+                        }
+                      </div>
+                    } @else {
+                      <p class="rounded-2xl border border-line/60 bg-panel/70 px-4 py-3 text-sm text-muted">
+                        En carta integrada, el catálogo estructurado queda alineado directamente con la experiencia de recomendación.
+                      </p>
+                    }
+
+                    @if (tenantMenuFormMessage()) {
+                      <p class="rounded-2xl border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-danger">
+                        {{ tenantMenuFormMessage() }}
+                      </p>
+                    }
+
+                    <div class="flex flex-wrap gap-3">
+                      <button type="button" class="mm-button-primary" [disabled]="workspaceFacade.updateStatus() === 'loading'" (click)="saveTenantMenuWorkspace()">
+                        {{ workspaceFacade.updateStatus() === 'loading' ? 'Guardando...' : 'Guardar carta' }}
+                      </button>
+                      <button
+                        type="button"
+                        class="mm-button-secondary"
+                        [disabled]="workspaceFacade.updateStatus() === 'loading' || !workspaceFacade.tenantMenuWorkspace()?.draftVersion"
+                        (click)="publishTenantMenuWorkspace()"
+                      >
+                        Publicar
+                      </button>
+                    </div>
+                  </article>
+
+                  <div class="space-y-4">
+                    <article class="mm-surface space-y-4 p-5">
+                      <div class="flex items-center justify-between gap-3">
+                        <div class="space-y-2">
+                          <p class="mm-eyebrow">Catálogo editable</p>
+                          <h3 class="text-2xl font-semibold text-text">
+                            {{ tenantMenuSourceType === 'PDF' ? 'Cocteles del catálogo de pedido' : 'Items estructurados de la carta' }}
+                          </h3>
+                        </div>
+                        <button type="button" class="mm-button-secondary" (click)="addTenantMenuItem()">Agregar item</button>
+                      </div>
+
+                      @if (workspaceFacade.tenantMenuStatus() === 'loading') {
+                        <mm-loading-skeleton [cards]="2" />
+                      } @else {
+                        <div class="space-y-3">
+                          @for (item of tenantMenuItems(); track item.id; let index = $index) {
+                            <article class="rounded-3xl border border-line/70 bg-panel/70 p-4">
+                              <div class="flex items-center justify-between gap-3">
+                                <p class="text-sm font-medium text-text">Item {{ index + 1 }}</p>
+                                @if (tenantMenuItems().length > 1) {
+                                  <button type="button" class="text-sm text-muted" (click)="removeTenantMenuItem(item.id)">Quitar</button>
+                                }
+                              </div>
+
+                              <div class="mt-4 grid gap-4">
+                                <label class="grid gap-2">
+                                  <span class="text-sm font-medium text-text">Sección / categoría</span>
+                                  <input class="mm-input" [name]="'platformMenuCategory' + item.id" [ngModel]="item.categoryName" (ngModelChange)="updateTenantMenuItemField(item.id, 'categoryName', $event)" />
+                                </label>
+                                <label class="grid gap-2">
+                                  <span class="text-sm font-medium text-text">Nombre</span>
+                                  <input class="mm-input" [name]="'platformMenuName' + item.id" [ngModel]="item.name" (ngModelChange)="updateTenantMenuItemField(item.id, 'name', $event)" />
+                                </label>
+                                <label class="grid gap-2">
+                                  <span class="text-sm font-medium text-text">Descripción</span>
+                                  <textarea class="mm-input min-h-20" [name]="'platformMenuDescription' + item.id" [ngModel]="item.description" (ngModelChange)="updateTenantMenuItemField(item.id, 'description', $event)"></textarea>
+                                </label>
+                                <div class="grid gap-4 md:grid-cols-3">
+                                  <label class="grid gap-2">
+                                    <span class="text-sm font-medium text-text">Precio</span>
+                                    <input class="mm-input" type="number" min="0" step="0.01" [name]="'platformMenuPrice' + item.id" [ngModel]="item.price" (ngModelChange)="updateTenantMenuItemField(item.id, 'price', $event)" />
+                                  </label>
+                                  <label class="grid gap-2">
+                                    <span class="text-sm font-medium text-text">Moneda</span>
+                                    <input class="mm-input uppercase" [name]="'platformMenuCurrency' + item.id" [ngModel]="item.currencyCode" (ngModelChange)="updateTenantMenuItemField(item.id, 'currencyCode', $event)" />
+                                  </label>
+                                  <label class="grid gap-2">
+                                    <span class="text-sm font-medium text-text">Tipo</span>
+                                    <select class="mm-input" [name]="'platformMenuType' + item.id" [ngModel]="item.productType" (ngModelChange)="updateTenantMenuItemField(item.id, 'productType', $event)">
+                                      @for (productType of menuProductTypes; track productType) {
+                                        <option [value]="productType">{{ productType }}</option>
+                                      }
+                                    </select>
+                                  </label>
+                                </div>
+                                <label class="flex items-center gap-3 text-sm text-text">
+                                  <input type="checkbox" [name]="'platformMenuFeatured' + item.id" [ngModel]="item.featured" (ngModelChange)="updateTenantMenuItemField(item.id, 'featured', $event)" />
+                                  <span>Destacar en la experiencia</span>
+                                </label>
+                              </div>
+                            </article>
+                          }
+                        </div>
+                      }
+                    </article>
+
+                    <article class="mm-surface space-y-4 p-5">
+                      <div class="space-y-2">
+                        <p class="mm-eyebrow">Estado actual</p>
+                        <h3 class="text-2xl font-semibold text-text">{{ workspaceFacade.tenantMenuWorkspace()?.branchName || 'Sin sucursal seleccionada' }}</h3>
+                      </div>
+
+                      @if (workspaceFacade.tenantMenuWorkspace()?.draftVersion) {
+                        <article class="rounded-3xl border border-line/70 bg-panel/70 p-4">
+                          <p class="mm-eyebrow">Draft</p>
+                          <p class="mt-2 text-sm text-muted">
+                            {{ workspaceFacade.tenantMenuWorkspace()?.draftVersion?.sourceType }} · {{ workspaceFacade.tenantMenuWorkspace()?.draftVersion?.items?.length }} items
+                          </p>
+                          @if (workspaceFacade.tenantMenuWorkspace()?.draftVersion?.pdfFileName) {
+                            <div class="mt-3 flex flex-wrap gap-2">
+                              <span class="mm-chip">{{ workspaceFacade.tenantMenuWorkspace()?.draftVersion?.pdfFileName }}</span>
+                              <button type="button" class="mm-button-secondary" (click)="previewTenantMenuPdf('DRAFT')">Abrir PDF</button>
+                            </div>
+                          }
+                        </article>
+                      }
+
+                      @if (workspaceFacade.tenantMenuWorkspace()?.publishedVersion) {
+                        <article class="rounded-3xl border border-line/70 bg-panel/70 p-4">
+                          <p class="mm-eyebrow">Publicado</p>
+                          <p class="mt-2 text-sm text-muted">
+                            {{ workspaceFacade.tenantMenuWorkspace()?.publishedVersion?.sourceType }} ·
+                            {{ workspaceFacade.tenantMenuWorkspace()?.publishedVersion?.updatedAt | date: 'short' }}
+                          </p>
+                          @if (workspaceFacade.tenantMenuWorkspace()?.publishedVersion?.pdfFileName) {
+                            <div class="mt-3 flex flex-wrap gap-2">
+                              <span class="mm-chip">{{ workspaceFacade.tenantMenuWorkspace()?.publishedVersion?.pdfFileName }}</span>
+                              <button type="button" class="mm-button-secondary" (click)="previewTenantMenuPdf('PUBLISHED')">Abrir PDF publicado</button>
+                            </div>
+                          }
+                        </article>
+                      }
+                    </article>
+                  </div>
+                </section>
+
+                <section class="grid gap-5 xl:grid-cols-[minmax(0,24rem),1fr]">
+                  <article class="mm-surface space-y-4 p-5">
+                    <div class="space-y-2">
+                      <p class="mm-eyebrow">Credenciales del tenant</p>
+                      <h3 class="text-2xl font-semibold text-text">Staff administrable desde SaaS</h3>
+                      <p class="text-sm leading-6 text-muted">
+                        Puedes resetear claves y editar acceso de todo el staff, excepto la credencial bootstrap inicial del owner.
+                      </p>
+                    </div>
+
+                    <label class="grid gap-2">
+                      <span class="text-sm font-medium text-text">Clave temporal para reset</span>
+                      <input class="mm-input" type="password" name="tenantStaffTemporaryPassword" [(ngModel)]="tenantStaffTemporaryPassword" />
+                      <span class="text-xs text-muted">Mínimo 8 caracteres y mantiene las reglas de complejidad vigentes.</span>
+                    </label>
+
+                    @if (!canResetTenantStaffPassword() && tenantStaffTemporaryPassword.trim()) {
+                      <p class="text-sm text-danger">La clave temporal debe tener entre 8 y 128 caracteres.</p>
+                    }
+
+                    @if (workspaceFacade.tenantStaffUsersStatus() === 'loading') {
+                      <mm-loading-skeleton [cards]="3" />
+                    } @else if (workspaceFacade.tenantStaffUsers().length === 0) {
+                      <mm-empty-state title="Sin staff adicional" description="Este tenant todavía no tiene usuarios internos administrables además del owner." />
+                    } @else {
+                      <div class="space-y-3">
+                        @for (staffUser of workspaceFacade.tenantStaffUsers(); track staffUser.userId) {
+                          <article class="rounded-3xl border border-line/70 bg-panel/70 p-4">
+                            <div class="space-y-3">
+                              <div>
+                                <h4 class="text-lg font-semibold text-text">{{ staffUser.fullName }}</h4>
+                                <p class="text-sm text-muted">{{ staffUser.email }} · {{ staffUser.status }}</p>
+                              </div>
+
+                              <div class="flex flex-wrap gap-2">
+                                @for (assignment of staffUser.assignments; track assignment.assignmentId) {
+                                  <span class="mm-chip">
+                                    {{ assignment.roleName }} · {{ assignment.scopeType }} @ {{ assignment.branchName ?? assignment.brandName ?? 'tenant' }}
+                                  </span>
+                                }
+                              </div>
+
+                              <p class="text-sm text-muted">
+                                Último acceso {{ staffUser.lastLoginAt ? (staffUser.lastLoginAt | date: 'short') : 'sin acceso todavía' }}
+                              </p>
+
+                              @if (staffUser.bootstrapProtected) {
+                                <p class="rounded-2xl border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-text">
+                                  Este usuario corresponde a la credencial bootstrap inicial. Para recovery usa "Reemitir credencial owner".
+                                </p>
+                              }
+
+                              <div class="flex flex-wrap gap-2">
+                                <button
+                                  type="button"
+                                  class="mm-button-secondary"
+                                  [disabled]="staffUser.bootstrapProtected"
+                                  (click)="startTenantStaffEdit(staffUser)"
+                                >
+                                  Editar acceso
+                                </button>
+                                <button
+                                  type="button"
+                                  class="mm-button-secondary"
+                                  [disabled]="staffUser.bootstrapProtected || !canResetTenantStaffPassword() || workspaceFacade.tenantStaffSaveStatus() === 'loading'"
+                                  (click)="resetTenantStaffPassword(staffUser)"
+                                >
+                                  {{ workspaceFacade.tenantStaffSaveStatus() === 'loading' ? 'Procesando...' : 'Resetear clave' }}
+                                </button>
+                              </div>
+                            </div>
+                          </article>
+                        }
+                      </div>
+                    }
+                  </article>
+
+                  <div class="space-y-4">
+                    <article class="mm-surface space-y-4 p-5">
+                      <div class="flex items-center justify-between gap-3">
+                        <div class="space-y-2">
+                          <p class="mm-eyebrow">Catálogo de roles</p>
+                          <h3 class="text-2xl font-semibold text-text">Base operable del tenant</h3>
+                        </div>
+                        <button
+                          type="button"
+                          class="mm-button-secondary"
+                          (click)="showTenantRoleCatalog.set(!showTenantRoleCatalog())"
+                        >
+                          {{ showTenantRoleCatalog() ? 'Ocultar catálogo' : 'Mostrar catálogo' }}
+                        </button>
+                      </div>
+
+                      @if (showTenantRoleCatalog()) {
+                        @if (workspaceFacade.tenantStaffRolesStatus() === 'loading') {
+                          <mm-loading-skeleton [cards]="2" />
+                        } @else {
+                          <div class="grid gap-3 lg:grid-cols-2">
+                            @for (role of workspaceFacade.tenantStaffRoles(); track role.roleId) {
+                              <article class="rounded-3xl border border-line/70 bg-panel/70 p-4">
+                                <p class="text-sm uppercase tracking-[0.18em] text-accent">{{ role.code }}</p>
+                                <h4 class="mt-2 text-lg font-semibold text-text">{{ role.name }}</h4>
+                                <p class="mt-2 text-sm leading-6 text-muted">{{ role.description }}</p>
+                                <p class="mt-3 text-sm text-muted">{{ role.permissions.length }} permisos vinculados</p>
+                              </article>
+                            }
+                          </div>
+                        }
+                      } @else {
+                        <p class="text-sm text-muted">Catálogo oculto para priorizar la operación diaria del staff.</p>
+                      }
+                    </article>
+
+                    @if (editingTenantStaffUser()) {
+                      <article class="mm-surface space-y-4 p-5">
+                        <div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                          <div class="space-y-2">
+                            <p class="mm-eyebrow">Editor de acceso</p>
+                            <h3 class="text-2xl font-semibold text-text">{{ editingTenantStaffUser()?.fullName }}</h3>
+                            <p class="text-sm text-muted">{{ editingTenantStaffUser()?.email }}</p>
+                          </div>
+                          <button type="button" class="mm-button-secondary" (click)="cancelTenantStaffEdit()">Cancelar</button>
+                        </div>
+
+                        <div class="grid gap-4 md:grid-cols-2">
+                          <label class="grid gap-2">
+                            <span class="text-sm font-medium text-text">Estado operativo</span>
+                            <select class="mm-input" name="tenantStaffStatus" [(ngModel)]="tenantStaffStatus">
+                              <option value="INVITED">Invitado</option>
+                              <option value="ACTIVE">Activo</option>
+                              <option value="LOCKED">Bloqueado</option>
+                              <option value="DISABLED">Deshabilitado</option>
+                            </select>
+                          </label>
+
+                          <label class="flex items-center gap-3 rounded-2xl border border-line/60 bg-panel/70 px-4 py-3">
+                            <input type="checkbox" name="tenantStaffRequireReset" [(ngModel)]="tenantStaffRequireReset" />
+                            <span class="text-sm text-muted">Forzar cambio de contraseña en el próximo ingreso</span>
+                          </label>
+                        </div>
+
+                        <div class="space-y-3">
+                          <div class="flex items-center justify-between gap-3">
+                            <div>
+                              <p class="text-sm font-medium text-text">Asignaciones activas</p>
+                              <p class="text-sm text-muted">Multirol, multi-scope y alcance por marca o sucursal.</p>
+                            </div>
+                            <button type="button" class="mm-button-secondary" (click)="addTenantStaffAssignment()">Agregar rol</button>
+                          </div>
+
+                          @for (assignment of tenantStaffAssignments(); track assignment.id; let index = $index) {
+                            <article class="rounded-3xl border border-line/70 bg-panel/70 p-4">
+                              <div class="flex items-center justify-between gap-3">
+                                <p class="text-sm font-medium text-text">Asignación {{ index + 1 }}</p>
+                                @if (tenantStaffAssignments().length > 1) {
+                                  <button type="button" class="text-sm text-muted" (click)="removeTenantStaffAssignment(assignment.id)">Quitar</button>
+                                }
+                              </div>
+
+                              <div class="mt-4 grid gap-4 md:grid-cols-2">
+                                <label class="grid gap-2">
+                                  <span class="text-sm font-medium text-text">Rol</span>
+                                  <select
+                                    class="mm-input"
+                                    [name]="'tenantStaffRole' + assignment.id"
+                                    [ngModel]="assignment.roleCode"
+                                    (ngModelChange)="updateTenantStaffRole(assignment.id, $event)"
+                                  >
+                                    <option value="" disabled>Selecciona un rol</option>
+                                    @for (role of workspaceFacade.tenantStaffRoles(); track role.roleId) {
+                                      <option [value]="role.code">{{ role.name }}</option>
+                                    }
+                                  </select>
+                                </label>
+
+                                <label class="grid gap-2">
+                                  <span class="text-sm font-medium text-text">Scope</span>
+                                  <select
+                                    class="mm-input"
+                                    [name]="'tenantStaffScope' + assignment.id"
+                                    [ngModel]="assignment.scopeType"
+                                    (ngModelChange)="updateTenantStaffScope(assignment.id, $event)"
+                                  >
+                                    <option value="TENANT">Tenant completo</option>
+                                    <option value="BRAND">Marca</option>
+                                    <option value="BRANCH">Sucursal</option>
+                                  </select>
+                                </label>
+                              </div>
+
+                              @if (assignment.scopeType === 'BRAND') {
+                                <div class="mt-4 space-y-2">
+                                  <span class="text-sm font-medium text-text">Marcas del alcance</span>
+                                  <div class="grid gap-2 md:grid-cols-2">
+                                    @for (brand of tenantBrands(); track brand.brandId) {
+                                      <label class="flex items-center gap-3 rounded-2xl border border-line/70 bg-panel/90 px-4 py-3 text-sm text-text">
+                                        <input
+                                          type="checkbox"
+                                          [checked]="assignment.brandIds.includes(brand.brandId)"
+                                          (change)="toggleTenantStaffBrand(assignment.id, brand.brandId, $any($event.target).checked)"
+                                        />
+                                        <span>{{ brand.brandName }}</span>
+                                      </label>
+                                    }
+                                  </div>
+                                </div>
+                              }
+
+                              @if (assignment.scopeType === 'BRANCH') {
+                                <div class="mt-4 space-y-2">
+                                  <span class="text-sm font-medium text-text">Sucursales del alcance</span>
+                                  <div class="grid gap-2 md:grid-cols-2">
+                                    @for (branch of workspaceFacade.tenantDetail()?.branches ?? []; track branch.branchId) {
+                                      <label class="flex items-center gap-3 rounded-2xl border border-line/70 bg-panel/90 px-4 py-3 text-sm text-text">
+                                        <input
+                                          type="checkbox"
+                                          [checked]="assignment.branchIds.includes(branch.branchId)"
+                                          (change)="toggleTenantStaffBranch(assignment.id, branch.branchId, $any($event.target).checked)"
+                                        />
+                                        <span>{{ branch.name }}</span>
+                                      </label>
+                                    }
+                                  </div>
+                                </div>
+                              }
+                            </article>
+                          }
+                        </div>
+
+                        @if (tenantStaffFormMessage()) {
+                          <p class="rounded-2xl border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-danger">
+                            {{ tenantStaffFormMessage() }}
+                          </p>
+                        }
+
+                        <button
+                          type="button"
+                          class="mm-button-primary"
+                          [disabled]="workspaceFacade.tenantStaffSaveStatus() === 'loading'"
+                          (click)="saveTenantStaffAccess()"
+                        >
+                          {{ workspaceFacade.tenantStaffSaveStatus() === 'loading' ? 'Guardando...' : 'Guardar acceso del staff' }}
+                        </button>
+                      </article>
+                    } @else {
+                      <mm-empty-state
+                        title="Selecciona un usuario"
+                        description="Elige un miembro del staff para editar roles, scopes, sucursales, estado y policy de reset."
+                      />
+                    }
+                  </div>
+                </section>
               </div>
             } @else {
               <mm-empty-state title="Tenant no encontrado" description="El identificador solicitado no existe o ya no está disponible." />
@@ -997,6 +1464,9 @@ export class PlatformRoutePageComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly platformAdminApiClient = inject(PlatformAdminApiClient);
+  private platformStaffAssignmentSequence = 0;
+  private platformMenuItemSequence = 0;
+  private loadedTenantStaffId: string | null = null;
 
   protected readonly workspaceFacade = inject(PlatformWorkspaceFacade);
   protected readonly platformSessionService = inject(PlatformSessionService);
@@ -1009,6 +1479,30 @@ export class PlatformRoutePageComponent {
     (tenant) => tenant.subscriptionStatus === 'TRIAL'
   ));
   protected readonly downloadLabel = signal<string | null>(null);
+  protected readonly showTenantRoleCatalog = signal(false);
+  protected readonly menuSourceTypes: PlatformMenuSourceTypeDto[] = ['STRUCTURED', 'PDF'];
+  protected readonly menuProductTypes = ['cocktail', 'mocktail', 'wine', 'beer', 'food', 'dessert', 'other'];
+  protected readonly editingTenantStaffUserId = signal<string | null>(null);
+  protected readonly tenantStaffFormMessage = signal<string | null>(null);
+  protected readonly editingTenantStaffUser = computed(() => {
+    const userId = this.editingTenantStaffUserId();
+    return this.workspaceFacade.tenantStaffUsers().find((staffUser) => staffUser.userId === userId) ?? null;
+  });
+  protected readonly tenantBrands = computed(() => {
+    const brands = new Map<string, { brandId: string; brandName: string }>();
+    for (const branch of this.workspaceFacade.tenantDetail()?.branches ?? []) {
+      if (!branch.brandId || !branch.brandName) {
+        continue;
+      }
+      if (!brands.has(branch.brandId)) {
+        brands.set(branch.brandId, {
+          brandId: branch.brandId,
+          brandName: branch.brandName
+        });
+      }
+    }
+    return [...brands.values()].sort((left, right) => left.brandName.localeCompare(right.brandName));
+  });
 
   protected readonly tenantStatuses: PlatformTenantStatusDto[] = ['TRIAL', 'ACTIVE', 'SUSPENDED', 'ARCHIVED'];
   protected readonly subscriptionStatuses: PlatformSubscriptionStatusDto[] = ['TRIAL', 'ACTIVE', 'PAST_DUE', 'SUSPENDED', 'ARCHIVED'];
@@ -1038,9 +1532,23 @@ export class PlatformRoutePageComponent {
   protected ticketStatus: PlatformSupportTicketStatusDto = 'OPEN';
   protected ticketPriority: PlatformSupportTicketPriorityDto = 'MEDIUM';
   protected ticketResolutionSummary = '';
+  protected selectedTenantMenuBranchId = '';
+  protected tenantMenuName = '';
+  protected tenantMenuDescription = '';
+  protected tenantMenuSourceType: PlatformMenuSourceTypeDto = 'STRUCTURED';
+  protected tenantMenuNotesText = '';
+  protected readonly tenantMenuItems = signal<PlatformMenuItemForm[]>([this.createPlatformMenuItem()]);
+  protected readonly tenantMenuFormMessage = signal<string | null>(null);
+  protected tenantMenuPdfName = '';
+  protected tenantMenuPdfContentType = 'application/pdf';
+  protected tenantMenuPdfBase64: string | null = null;
   protected currentPassword = '';
   protected newPassword = '';
   protected confirmPassword = '';
+  protected tenantStaffTemporaryPassword = '';
+  protected tenantStaffStatus: PlatformStaffUserStatusDto = 'ACTIVE';
+  protected tenantStaffRequireReset = true;
+  protected readonly tenantStaffAssignments = signal<PlatformStaffAssignmentForm[]>([]);
   protected readonly passwordFormMessage = signal<string | null>(null);
   private readonly logoutAfterPasswordChange = signal(false);
 
@@ -1106,6 +1614,40 @@ export class PlatformRoutePageComponent {
     });
 
     effect(() => {
+      if (this.content.pageId !== 'tenant-detail') {
+        return;
+      }
+
+      const detail = this.workspaceFacade.tenantDetail();
+      if (!detail) {
+        return;
+      }
+
+      if (!this.selectedTenantMenuBranchId && detail.branches.length > 0) {
+        this.selectedTenantMenuBranchId = detail.branches[0].branchId;
+      }
+
+      if (detail.tenantId && this.selectedTenantMenuBranchId) {
+        this.workspaceFacade.loadTenantMenuWorkspace(detail.tenantId, this.selectedTenantMenuBranchId);
+      }
+    });
+
+    effect(() => {
+      if (this.content.pageId !== 'tenant-detail') {
+        return;
+      }
+
+      const tenantId = this.workspaceFacade.tenantDetail()?.tenantId;
+      if (!tenantId || this.loadedTenantStaffId === tenantId) {
+        return;
+      }
+
+      this.loadedTenantStaffId = tenantId;
+      this.workspaceFacade.loadTenantStaffRoles(tenantId, true);
+      this.workspaceFacade.loadTenantStaffUsers(tenantId, true);
+    });
+
+    effect(() => {
       if (this.workspaceFacade.createStatus() === 'success') {
         this.createForm = this.createFormDefaults();
       }
@@ -1136,6 +1678,36 @@ export class PlatformRoutePageComponent {
         this.logout();
       }
     });
+
+    effect(() => {
+      if (this.content.pageId !== 'tenant-detail' || this.workspaceFacade.tenantStaffSaveStatus() !== 'success') {
+        return;
+      }
+
+      this.tenantStaffTemporaryPassword = '';
+      this.tenantStaffFormMessage.set(null);
+      this.editingTenantStaffUserId.set(null);
+      this.tenantStaffAssignments.set([]);
+    });
+
+    effect(() => {
+      if (this.content.pageId !== 'tenant-detail') {
+        return;
+      }
+
+      const menuWorkspace = this.workspaceFacade.tenantMenuWorkspace();
+      if (!menuWorkspace) {
+        return;
+      }
+
+      const version = menuWorkspace.draftVersion ?? menuWorkspace.publishedVersion;
+      if (!version) {
+        this.resetTenantMenuForm();
+        return;
+      }
+
+      this.hydrateTenantMenuForm(version);
+    });
   }
 
   protected showsWorkspaceControls(): boolean {
@@ -1154,6 +1726,229 @@ export class PlatformRoutePageComponent {
       return;
     }
     this.workspaceFacade.refreshTenant(tenantId);
+    if (this.selectedTenantMenuBranchId) {
+      this.workspaceFacade.loadTenantMenuWorkspace(tenantId, this.selectedTenantMenuBranchId);
+    }
+    this.workspaceFacade.loadTenantStaffRoles(tenantId, true);
+    this.workspaceFacade.loadTenantStaffUsers(tenantId, true);
+  }
+
+  protected resetOwnerCredential(): void {
+    const tenantId = this.workspaceFacade.tenantDetail()?.tenantId;
+    if (!tenantId) {
+      return;
+    }
+
+    const confirmed = globalThis.confirm(
+      'Se generará una nueva contraseña temporal para el owner del tenant y se forzará su cambio en el próximo ingreso. ¿Continuar?'
+    );
+    if (!confirmed) {
+      return;
+    }
+
+    this.workspaceFacade.resetTenantOwnerCredential(tenantId);
+  }
+
+  protected changeTenantMenuBranch(branchId: string): void {
+    this.selectedTenantMenuBranchId = branchId;
+    const tenantId = this.workspaceFacade.tenantDetail()?.tenantId;
+    if (!tenantId || !branchId) {
+      return;
+    }
+
+    this.workspaceFacade.loadTenantMenuWorkspace(tenantId, branchId);
+  }
+
+  protected addTenantMenuItem(): void {
+    this.tenantMenuItems.update((items) => [...items, this.createPlatformMenuItem()]);
+    this.tenantMenuFormMessage.set(null);
+  }
+
+  protected removeTenantMenuItem(itemId: string): void {
+    this.tenantMenuItems.update((items) => items.filter((item) => item.id !== itemId));
+    this.tenantMenuFormMessage.set(null);
+  }
+
+  protected updateTenantMenuItemField(itemId: string, field: keyof Omit<PlatformMenuItemForm, 'id'>, value: string | boolean): void {
+    this.tenantMenuItems.update((items) => items.map((item) => item.id === itemId
+      ? {
+          ...item,
+          [field]: value
+        }
+      : item));
+    this.tenantMenuFormMessage.set(null);
+  }
+
+  protected async onTenantMenuPdfSelected(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement | null;
+    const file = input?.files?.item(0);
+    if (!file) {
+      return;
+    }
+
+    if (file.type !== 'application/pdf') {
+      this.tenantMenuFormMessage.set('Solo se admiten archivos PDF para la carta subida.');
+      return;
+    }
+
+    this.tenantMenuPdfName = file.name;
+    this.tenantMenuPdfContentType = file.type || 'application/pdf';
+    this.tenantMenuPdfBase64 = await this.readPlatformFileAsBase64(file);
+    this.tenantMenuFormMessage.set(null);
+  }
+
+  protected saveTenantMenuWorkspace(): void {
+    const tenantId = this.workspaceFacade.tenantDetail()?.tenantId;
+    if (!tenantId) {
+      return;
+    }
+
+    const validationMessage = this.validateTenantMenuForm();
+    this.tenantMenuFormMessage.set(validationMessage);
+    if (validationMessage) {
+      return;
+    }
+
+    this.workspaceFacade.saveTenantMenuWorkspace(tenantId, {
+      branchId: this.selectedTenantMenuBranchId,
+      menuName: this.tenantMenuName.trim(),
+      menuDescription: this.tenantMenuDescription.trim() || null,
+      sourceType: this.tenantMenuSourceType,
+      notes: this.tenantMenuNotesText.split('\n').map((note) => note.trim()).filter(Boolean),
+      items: this.tenantMenuItems().map((item) => this.toPlatformMenuItem(item)),
+      pdfUpload: this.tenantMenuSourceType === 'PDF' && this.tenantMenuPdfBase64
+        ? {
+            fileName: this.tenantMenuPdfName,
+            contentType: this.tenantMenuPdfContentType,
+            base64: this.tenantMenuPdfBase64
+          }
+        : null
+    });
+  }
+
+  protected publishTenantMenuWorkspace(): void {
+    const tenantId = this.workspaceFacade.tenantDetail()?.tenantId;
+    if (!tenantId || !this.selectedTenantMenuBranchId) {
+      return;
+    }
+
+    this.workspaceFacade.publishTenantMenuWorkspace(tenantId, this.selectedTenantMenuBranchId);
+  }
+
+  protected previewTenantMenuPdf(versionStatus: 'DRAFT' | 'PUBLISHED'): void {
+    const tenantId = this.workspaceFacade.tenantDetail()?.tenantId;
+    if (!tenantId || !this.selectedTenantMenuBranchId) {
+      return;
+    }
+
+    this.platformAdminApiClient.downloadTenantMenuPdf(tenantId, this.selectedTenantMenuBranchId, versionStatus).pipe(take(1)).subscribe((blob) => {
+      const objectUrl = URL.createObjectURL(blob);
+      globalThis.open(objectUrl, '_blank', 'noopener,noreferrer');
+      setTimeout(() => URL.revokeObjectURL(objectUrl), 5000);
+    });
+  }
+
+  protected startTenantStaffEdit(staffUser: PlatformTenantStaffUserDto): void {
+    if (staffUser.bootstrapProtected) {
+      this.tenantStaffFormMessage.set('La credencial bootstrap inicial se gestiona solo desde el flujo de recovery del owner.');
+      return;
+    }
+
+    this.editingTenantStaffUserId.set(staffUser.userId);
+    this.tenantStaffStatus = staffUser.status;
+    this.tenantStaffRequireReset = staffUser.passwordResetRequired;
+    this.tenantStaffAssignments.set(this.mapPlatformAssignments(staffUser.assignments));
+    this.tenantStaffFormMessage.set(null);
+  }
+
+  protected cancelTenantStaffEdit(): void {
+    this.editingTenantStaffUserId.set(null);
+    this.tenantStaffAssignments.set([]);
+    this.tenantStaffFormMessage.set(null);
+  }
+
+  protected addTenantStaffAssignment(): void {
+    this.tenantStaffAssignments.update((assignments) => [...assignments, this.createPlatformAssignment()]);
+    this.tenantStaffFormMessage.set(null);
+  }
+
+  protected removeTenantStaffAssignment(assignmentId: string): void {
+    this.tenantStaffAssignments.update((assignments) => assignments.filter((assignment) => assignment.id !== assignmentId));
+    this.tenantStaffFormMessage.set(null);
+  }
+
+  protected updateTenantStaffRole(assignmentId: string, roleCode: string): void {
+    this.patchTenantStaffAssignment(assignmentId, { roleCode });
+  }
+
+  protected updateTenantStaffScope(assignmentId: string, scopeType: PlatformStaffAccessScopeDto): void {
+    this.patchTenantStaffAssignment(assignmentId, {
+      scopeType,
+      brandIds: scopeType === 'BRAND' ? [] : [],
+      branchIds: scopeType === 'BRANCH' ? [] : []
+    });
+  }
+
+  protected toggleTenantStaffBrand(assignmentId: string, brandId: string, checked: boolean): void {
+    const assignment = this.tenantStaffAssignments().find((currentAssignment) => currentAssignment.id === assignmentId);
+    if (!assignment) {
+      return;
+    }
+
+    const brandIds = checked
+      ? [...assignment.brandIds, brandId]
+      : assignment.brandIds.filter((currentBrandId) => currentBrandId !== brandId);
+    this.patchTenantStaffAssignment(assignmentId, { brandIds });
+  }
+
+  protected toggleTenantStaffBranch(assignmentId: string, branchId: string, checked: boolean): void {
+    const assignment = this.tenantStaffAssignments().find((currentAssignment) => currentAssignment.id === assignmentId);
+    if (!assignment) {
+      return;
+    }
+
+    const branchIds = checked
+      ? [...assignment.branchIds, branchId]
+      : assignment.branchIds.filter((currentBranchId) => currentBranchId !== branchId);
+    this.patchTenantStaffAssignment(assignmentId, { branchIds });
+  }
+
+  protected saveTenantStaffAccess(): void {
+    const tenantId = this.workspaceFacade.tenantDetail()?.tenantId;
+    const userId = this.editingTenantStaffUserId();
+    if (!tenantId || !userId) {
+      return;
+    }
+
+    const validationMessage = this.validatePlatformStaffAssignments(this.tenantStaffAssignments());
+    this.tenantStaffFormMessage.set(validationMessage);
+    if (validationMessage) {
+      return;
+    }
+
+    this.workspaceFacade.updateTenantStaffUserAccess(tenantId, userId, {
+      status: this.tenantStaffStatus,
+      passwordResetRequired: this.tenantStaffRequireReset,
+      assignments: this.serializePlatformAssignments(this.tenantStaffAssignments())
+    });
+  }
+
+  protected resetTenantStaffPassword(staffUser: PlatformTenantStaffUserDto): void {
+    const tenantId = this.workspaceFacade.tenantDetail()?.tenantId;
+    const temporaryPassword = this.tenantStaffTemporaryPassword.trim();
+    if (!tenantId || staffUser.bootstrapProtected || !this.canResetTenantStaffPassword()) {
+      return;
+    }
+
+    this.workspaceFacade.resetTenantStaffUserPassword(tenantId, staffUser.userId, {
+      newPassword: temporaryPassword,
+      requireReset: true
+    });
+  }
+
+  protected canResetTenantStaffPassword(): boolean {
+    const temporaryPassword = this.tenantStaffTemporaryPassword.trim();
+    return temporaryPassword.length >= 8 && temporaryPassword.length <= 128;
   }
 
   protected createTenant(): void {
@@ -1458,6 +2253,213 @@ export class PlatformRoutePageComponent {
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/(^-|-$)/g, '');
     return normalized || fallback;
+  }
+
+  private createPlatformMenuItem(): PlatformMenuItemForm {
+    this.platformMenuItemSequence += 1;
+    return {
+      id: `platform-menu-item-${this.platformMenuItemSequence}`,
+      categoryName: '',
+      name: '',
+      description: '',
+      price: '',
+      currencyCode: 'CLP',
+      productType: 'cocktail',
+      featured: false
+    };
+  }
+
+  private validateTenantMenuForm(): string | null {
+    if (!this.selectedTenantMenuBranchId) {
+      return 'Debes seleccionar una sucursal para la carta.';
+    }
+
+    if (!this.tenantMenuName.trim()) {
+      return 'El nombre de la carta es obligatorio.';
+    }
+
+    if (this.tenantMenuItems().length === 0) {
+      return 'Debes incluir al menos un item.';
+    }
+
+    for (const item of this.tenantMenuItems()) {
+      if (!item.categoryName.trim() || !item.name.trim()) {
+        return 'Todos los items deben tener categoría y nombre.';
+      }
+      if (!item.price.trim() || Number.isNaN(Number(item.price)) || Number(item.price) < 0) {
+        return 'Todos los items deben tener un precio válido.';
+      }
+    }
+
+    const currentDraft = this.workspaceFacade.tenantMenuWorkspace()?.draftVersion;
+    const currentPublished = this.workspaceFacade.tenantMenuWorkspace()?.publishedVersion;
+    if (this.tenantMenuSourceType === 'PDF'
+      && !this.tenantMenuPdfBase64
+      && !currentDraft?.pdfFileName
+      && !currentPublished?.pdfFileName) {
+      return 'La carta en modo PDF requiere un archivo PDF.';
+    }
+
+    return null;
+  }
+
+  private toPlatformMenuItem(item: PlatformMenuItemForm): PlatformTenantMenuItemDto {
+    return {
+      categoryName: item.categoryName.trim(),
+      name: item.name.trim(),
+      description: item.description.trim() || null,
+      price: Number(item.price),
+      currencyCode: item.currencyCode.trim().toUpperCase(),
+      productType: item.productType,
+      featured: item.featured
+    };
+  }
+
+  private hydrateTenantMenuForm(version: PlatformTenantMenuVersionDto): void {
+    this.tenantMenuName = version.menuName;
+    this.tenantMenuDescription = version.description ?? '';
+    this.tenantMenuSourceType = version.sourceType;
+    this.tenantMenuNotesText = version.notes.join('\n');
+    this.tenantMenuItems.set(version.items.length > 0 ? version.items.map((item) => this.fromPlatformMenuItem(item)) : [this.createPlatformMenuItem()]);
+    this.tenantMenuPdfName = version.pdfFileName ?? '';
+    this.tenantMenuPdfContentType = version.pdfContentType ?? 'application/pdf';
+    this.tenantMenuPdfBase64 = null;
+    this.tenantMenuFormMessage.set(null);
+  }
+
+  private fromPlatformMenuItem(item: PlatformTenantMenuItemDto): PlatformMenuItemForm {
+    return {
+      id: this.createPlatformMenuItem().id,
+      categoryName: item.categoryName,
+      name: item.name,
+      description: item.description ?? '',
+      price: String(item.price),
+      currencyCode: item.currencyCode,
+      productType: item.productType,
+      featured: item.featured
+    };
+  }
+
+  private resetTenantMenuForm(): void {
+    this.tenantMenuName = '';
+    this.tenantMenuDescription = '';
+    this.tenantMenuSourceType = 'STRUCTURED';
+    this.tenantMenuNotesText = '';
+    this.tenantMenuItems.set([this.createPlatformMenuItem()]);
+    this.tenantMenuPdfName = '';
+    this.tenantMenuPdfContentType = 'application/pdf';
+    this.tenantMenuPdfBase64 = null;
+    this.tenantMenuFormMessage.set(null);
+  }
+
+  private readPlatformFileAsBase64(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () => reject(reader.error);
+      reader.onload = () => {
+        const result = String(reader.result ?? '');
+        const base64 = result.includes(',') ? result.split(',')[1] : result;
+        resolve(base64);
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  private createPlatformAssignment(scopeType: PlatformStaffAccessScopeDto = 'BRANCH'): PlatformStaffAssignmentForm {
+    this.platformStaffAssignmentSequence += 1;
+    return {
+      id: `tenant-staff-assignment-${this.platformStaffAssignmentSequence}`,
+      roleCode: '',
+      scopeType,
+      brandIds: [],
+      branchIds: []
+    };
+  }
+
+  private mapPlatformAssignments(assignments: PlatformTenantStaffAssignmentDto[]): PlatformStaffAssignmentForm[] {
+    const groupedAssignments = new Map<string, PlatformStaffAssignmentForm>();
+
+    for (const assignment of assignments) {
+      const key = `${assignment.roleCode}:${assignment.scopeType}`;
+      const currentAssignment = groupedAssignments.get(key) ?? {
+        ...this.createPlatformAssignment(assignment.scopeType),
+        roleCode: assignment.roleCode
+      };
+
+      if (assignment.brandId && !currentAssignment.brandIds.includes(assignment.brandId)) {
+        currentAssignment.brandIds = [...currentAssignment.brandIds, assignment.brandId];
+      }
+
+      if (assignment.branchId && !currentAssignment.branchIds.includes(assignment.branchId)) {
+        currentAssignment.branchIds = [...currentAssignment.branchIds, assignment.branchId];
+      }
+
+      groupedAssignments.set(key, currentAssignment);
+    }
+
+    return groupedAssignments.size > 0 ? [...groupedAssignments.values()] : [this.createPlatformAssignment()];
+  }
+
+  private patchTenantStaffAssignment(
+    assignmentId: string,
+    patch: Partial<Omit<PlatformStaffAssignmentForm, 'id'>>
+  ): void {
+    this.tenantStaffAssignments.update((assignments) => assignments.map((assignment) => assignment.id === assignmentId
+      ? {
+          ...assignment,
+          ...patch
+        }
+      : assignment));
+    this.tenantStaffFormMessage.set(null);
+  }
+
+  private serializePlatformAssignments(assignments: PlatformStaffAssignmentForm[]) {
+    return assignments.map((assignment) => ({
+      roleCode: assignment.roleCode,
+      scopeType: assignment.scopeType,
+      brandIds: assignment.scopeType === 'BRAND' ? assignment.brandIds : undefined,
+      branchIds: assignment.scopeType === 'BRANCH' ? assignment.branchIds : undefined
+    }));
+  }
+
+  private validatePlatformStaffAssignments(assignments: PlatformStaffAssignmentForm[]): string | null {
+    if (assignments.length === 0) {
+      return 'Debes mantener al menos una asignación activa.';
+    }
+
+    const validRoleCodes = new Set(this.workspaceFacade.tenantStaffRoles().map((role) => role.code));
+    const validBrandIds = new Set(this.tenantBrands().map((brand) => brand.brandId));
+    const validBranchIds = new Set((this.workspaceFacade.tenantDetail()?.branches ?? []).map((branch) => branch.branchId));
+
+    for (const assignment of assignments) {
+      if (!assignment.roleCode || !validRoleCodes.has(assignment.roleCode)) {
+        return 'Debes seleccionar un rol válido para cada asignación.';
+      }
+
+      if (assignment.scopeType === 'BRAND') {
+        if (assignment.brandIds.length === 0) {
+          return 'Las asignaciones por marca deben incluir al menos una marca.';
+        }
+
+        const invalidBrand = assignment.brandIds.some((brandId) => !validBrandIds.has(brandId));
+        if (invalidBrand) {
+          return 'Hay marcas fuera del tenant seleccionado.';
+        }
+      }
+
+      if (assignment.scopeType === 'BRANCH') {
+        if (assignment.branchIds.length === 0) {
+          return 'Las asignaciones por sucursal deben incluir al menos una sucursal.';
+        }
+
+        const invalidBranch = assignment.branchIds.some((branchId) => !validBranchIds.has(branchId));
+        if (invalidBranch) {
+          return 'Hay sucursales fuera del tenant seleccionado.';
+        }
+      }
+    }
+
+    return null;
   }
 
   private downloadBlob(blob: Blob, filename: string): void {

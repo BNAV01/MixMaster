@@ -30,6 +30,7 @@ import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.regex.Pattern;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -295,6 +296,37 @@ public class TenantProvisioningService {
         }
     }
 
+    @Transactional
+    public TenantProvisioningResult resetTenantOwnerCredential(String tenantId) {
+        tenantRepository.findById(tenantId)
+            .orElseThrow(() -> new IllegalArgumentException("Tenant was not found"));
+
+        StaffUser owner = requireTenantOwner(tenantId);
+        CredentialSecurityService.BootstrapCredential bootstrapCredential = credentialSecurityService.issueBootstrapCredential(
+            null,
+            owner.getEmail(),
+            owner.getFullName()
+        );
+
+        owner.setPasswordHash(passwordEncoder.encode(bootstrapCredential.password()));
+        owner.setPasswordSetAt(OffsetDateTime.now());
+        owner.setPasswordResetRequired(true);
+        owner.setFailedLoginAttempts(0);
+        owner.setLockedUntil(null);
+        owner.setStatus(StaffUserStatus.ACTIVE);
+        staffUserRepository.save(owner);
+
+        return new TenantProvisioningResult(
+            tenantId,
+            owner.getId(),
+            owner.getEmail(),
+            owner.getFullName(),
+            bootstrapCredential.password(),
+            bootstrapCredential.generated(),
+            owner.isPasswordResetRequired()
+        );
+    }
+
     private String normalizeCode(String rawValue) {
         String normalized = NON_ALPHANUMERIC.matcher(rawValue.trim().toLowerCase(Locale.ROOT)).replaceAll("-");
         normalized = normalized.replaceAll("(^-+|-+$)", "");
@@ -417,6 +449,22 @@ public class TenantProvisioningService {
         }
         String trimmed = resolveNullable(rawValue);
         return trimmed == null ? null : trimmed.toLowerCase(Locale.ROOT);
+    }
+
+    private StaffUser requireTenantOwner(String tenantId) {
+        Optional<Role> ownerRole = roleRepository.findByTenantIdAndCodeAndDeletedAtIsNull(tenantId, "TENANT_OWNER");
+        if (ownerRole.isEmpty()) {
+            throw new IllegalArgumentException("Tenant owner role was not found");
+        }
+
+        return staffRoleAssignmentRepository.findAllByTenantIdAndRole_IdAndStatus(
+            tenantId,
+            ownerRole.get().getId(),
+            StaffRoleAssignmentStatus.ACTIVE
+        ).stream()
+            .map(StaffRoleAssignment::getStaffUser)
+            .findFirst()
+            .orElseThrow(() -> new IllegalArgumentException("Tenant owner was not found"));
     }
 
     public record CreateTenantCommand(

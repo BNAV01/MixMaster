@@ -12,6 +12,9 @@ export type PlatformSupportTicketStatusDto = 'OPEN' | 'WAITING_ON_PLATFORM' | 'W
 export type PlatformEmailProviderDto = 'GOOGLE_WORKSPACE' | 'CUSTOM_SMTP';
 export type PlatformEmailTemplateCategoryDto = 'INFORMATIONAL' | 'ONBOARDING' | 'BILLING' | 'SUPPORT' | 'LEGAL' | 'CAMPAIGN' | 'SECURITY';
 export type PlatformEmailRecipientModeDto = 'OWNER' | 'BILLING' | 'CUSTOM';
+export type PlatformStaffAccessScopeDto = 'TENANT' | 'BRAND' | 'BRANCH';
+export type PlatformStaffUserStatusDto = 'INVITED' | 'ACTIVE' | 'LOCKED' | 'DISABLED';
+export type PlatformMenuSourceTypeDto = 'STRUCTURED' | 'PDF';
 
 export interface PlatformActorDto {
   userId: string;
@@ -188,6 +191,8 @@ export interface PlatformBootstrapCredentialDto {
 
 export interface PlatformTenantBranchDto {
   branchId: string;
+  brandId?: string | null;
+  brandName?: string | null;
   code: string;
   name: string;
   timezone: string;
@@ -196,6 +201,110 @@ export interface PlatformTenantBranchDto {
   commune: string | null;
   city: string | null;
   active: boolean;
+}
+
+export interface PlatformTenantRoleDto {
+  roleId: string;
+  code: string;
+  name: string;
+  description: string;
+  active: boolean;
+  permissions: string[];
+}
+
+export interface PlatformTenantStaffAssignmentDto {
+  assignmentId: string;
+  roleCode: string;
+  roleName: string;
+  scopeType: PlatformStaffAccessScopeDto;
+  brandId?: string | null;
+  brandName?: string | null;
+  branchId?: string | null;
+  branchName?: string | null;
+}
+
+export interface PlatformTenantStaffUserDto {
+  userId: string;
+  email: string;
+  fullName: string;
+  status: PlatformStaffUserStatusDto;
+  bootstrapProtected: boolean;
+  passwordResetRequired: boolean;
+  lastLoginAt?: string | null;
+  permissions: string[];
+  accessibleBranches: PlatformTenantBranchDto[];
+  assignments: PlatformTenantStaffAssignmentDto[];
+}
+
+export interface PlatformTenantMenuItemDto {
+  categoryName: string;
+  name: string;
+  description?: string | null;
+  price: number;
+  currencyCode: string;
+  productType: string;
+  featured: boolean;
+}
+
+export interface PlatformTenantMenuVersionDto {
+  versionId: string;
+  menuName: string;
+  versionNumber: number;
+  status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
+  sourceType: PlatformMenuSourceTypeDto;
+  recommendationMode: 'INTEGRATED' | 'CATALOG_ONLY';
+  description?: string | null;
+  notes: string[];
+  items: PlatformTenantMenuItemDto[];
+  pdfFileName?: string | null;
+  pdfContentType?: string | null;
+  pdfSizeBytes?: number | null;
+  publishedAt?: string | null;
+  updatedAt: string;
+}
+
+export interface PlatformTenantMenuWorkspaceDto {
+  menuId?: string | null;
+  branchId: string;
+  branchName: string;
+  brandId: string;
+  brandName: string;
+  draftVersion?: PlatformTenantMenuVersionDto | null;
+  publishedVersion?: PlatformTenantMenuVersionDto | null;
+}
+
+export interface PlatformTenantMenuPdfUploadRequestDto {
+  fileName: string;
+  contentType: string;
+  base64: string;
+}
+
+export interface SavePlatformTenantMenuWorkspaceRequestDto {
+  branchId: string;
+  menuName: string;
+  menuDescription?: string | null;
+  sourceType: PlatformMenuSourceTypeDto;
+  notes: string[];
+  items: PlatformTenantMenuItemDto[];
+  pdfUpload?: PlatformTenantMenuPdfUploadRequestDto | null;
+}
+
+export interface UpdatePlatformTenantStaffAssignmentRequestDto {
+  roleCode: string;
+  scopeType: PlatformStaffAccessScopeDto;
+  brandIds?: string[];
+  branchIds?: string[];
+}
+
+export interface UpdatePlatformTenantStaffAccessRequestDto {
+  status: PlatformStaffUserStatusDto;
+  passwordResetRequired: boolean;
+  assignments: UpdatePlatformTenantStaffAssignmentRequestDto[];
+}
+
+export interface ResetPlatformTenantStaffPasswordRequestDto {
+  newPassword: string;
+  requireReset: boolean;
 }
 
 export interface TenantSummaryDto {

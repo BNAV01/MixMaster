@@ -1,12 +1,17 @@
 package com.mixmaster.platform.interfaces.saasadmin.controllers;
 
+import com.mixmaster.platform.modules.identity.staff.models.StaffAccessScopeType;
+import com.mixmaster.platform.modules.identity.staff.models.StaffUserStatus;
 import com.mixmaster.platform.modules.organization.models.TenantOnboardingStage;
 import com.mixmaster.platform.modules.organization.models.TenantStatus;
 import com.mixmaster.platform.modules.organization.models.TenantSubscriptionStatus;
 import com.mixmaster.platform.modules.support.models.SupportTicketPriority;
 import com.mixmaster.platform.modules.support.models.SupportTicketStatus;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
@@ -56,7 +61,7 @@ record CreateTenantRequest(
     String primaryBranchCity,
     @NotBlank @Email String ownerEmail,
     @NotBlank String ownerFullName,
-    @Size(min = 12, max = 128) String ownerPassword,
+    @Size(min = 8, max = 128) String ownerPassword,
     String legalName,
     String taxId,
     @Email String billingEmail,
@@ -207,6 +212,8 @@ record PlatformBootstrapCredentialResponse(
 
 record PlatformTenantBranchResponse(
     String branchId,
+    String brandId,
+    String brandName,
     String code,
     String name,
     String timezone,
@@ -289,6 +296,63 @@ record PlatformTenantDetailResponse(
 ) {
 }
 
+record PlatformTenantStaffAssignmentResponse(
+    String assignmentId,
+    String roleCode,
+    String roleName,
+    String scopeType,
+    String brandId,
+    String brandName,
+    String branchId,
+    String branchName
+) {
+}
+
+record PlatformTenantStaffUserResponse(
+    String userId,
+    String email,
+    String fullName,
+    String status,
+    boolean bootstrapProtected,
+    boolean passwordResetRequired,
+    OffsetDateTime lastLoginAt,
+    Set<String> permissions,
+    List<PlatformTenantBranchResponse> accessibleBranches,
+    List<PlatformTenantStaffAssignmentResponse> assignments
+) {
+}
+
+record PlatformTenantRoleResponse(
+    String roleId,
+    String code,
+    String name,
+    String description,
+    boolean active,
+    List<String> permissions
+) {
+}
+
+record UpdatePlatformTenantStaffAssignmentRequest(
+    @NotBlank String roleCode,
+    @NotNull StaffAccessScopeType scopeType,
+    List<String> brandIds,
+    List<String> branchIds
+) {
+}
+
+record UpdatePlatformTenantStaffAccessRequest(
+    @NotNull StaffUserStatus status,
+    boolean passwordResetRequired,
+    @NotEmpty List<@Valid UpdatePlatformTenantStaffAssignmentRequest> assignments
+) {
+}
+
+record ResetPlatformTenantStaffPasswordRequest(
+    @NotBlank @Size(min = 8, max = 128) String newPassword,
+    boolean requireReset
+) {
+}
+
 record PlatformAccountProfileResponse(
     String userId,
     String email,
@@ -303,7 +367,7 @@ record PlatformAccountProfileResponse(
 
 record ChangePlatformPasswordRequest(
     @NotBlank String currentPassword,
-    @NotBlank @Size(min = 12, max = 128) String newPassword
+    @NotBlank @Size(min = 8, max = 128) String newPassword
 ) {
 }
 

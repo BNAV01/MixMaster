@@ -14,6 +14,8 @@ public interface StaffUserRepository extends JpaRepository<StaffUser, String> {
 
     List<StaffUser> findAllByTenantIdAndDeletedAtIsNullOrderByFullNameAsc(String tenantId);
 
+    Optional<StaffUser> findTopByTenantIdAndDeletedAtIsNullOrderByCreatedAtAsc(String tenantId);
+
     boolean existsByTenantIdAndEmailIgnoreCaseAndDeletedAtIsNull(String tenantId, String email);
 
     long countByTenantIdAndDeletedAtIsNull(String tenantId);

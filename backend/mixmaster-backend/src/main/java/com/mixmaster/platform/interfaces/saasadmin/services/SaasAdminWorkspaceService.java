@@ -250,6 +250,8 @@ public class SaasAdminWorkspaceService {
         List<TenantBranchSnapshot> branchSnapshots = branches.stream()
             .map(branch -> new TenantBranchSnapshot(
                 branch.getId(),
+                branch.getBrand().getId(),
+                branch.getBrand().getName(),
                 branch.getCode(),
                 branch.getName(),
                 branch.getTimezone(),
@@ -561,6 +563,8 @@ public class SaasAdminWorkspaceService {
 
     public record TenantBranchSnapshot(
         String branchId,
+        String brandId,
+        String brandName,
         String code,
         String name,
         String timezone,

@@ -18,13 +18,19 @@ import {
   PlatformLoginRequestDto,
   PlatformMessagingWorkspaceDto,
   PlatformRenderedEmailPreviewDto,
+  PlatformTenantMenuWorkspaceDto,
+  PlatformTenantRoleDto,
+  PlatformTenantStaffUserDto,
   PlatformSupportTicketDetailDto,
   PlatformSupportTicketSummaryDto,
   PlatformWorkspaceDto,
   PreviewPlatformEmailTemplateRequestDto,
+  ResetPlatformTenantStaffPasswordRequestDto,
+  SavePlatformTenantMenuWorkspaceRequestDto,
   SendPlatformTestEmailRequestDto,
   TenantDetailDto,
   TenantSummaryDto,
+  UpdatePlatformTenantStaffAccessRequestDto,
   UpdatePlatformEmailSettingsRequestDto,
   UpdatePlatformEmailTemplateRequestDto,
   UpdatePlatformSupportTicketRequestDto,
@@ -70,6 +76,75 @@ export class PlatformAdminApiClient {
 
   refreshTenant(tenantId: string): Observable<TenantDetailDto> {
     return this.httpClient.post<TenantDetailDto>(`${this.runtimeConfig.platformAdminApiBaseUrl}/tenants/${tenantId}/refresh`, {});
+  }
+
+  resetTenantOwnerCredential(tenantId: string): Observable<TenantDetailDto> {
+    return this.httpClient.post<TenantDetailDto>(`${this.runtimeConfig.platformAdminApiBaseUrl}/tenants/${tenantId}/owner-credential/reset`, {});
+  }
+
+  listTenantStaffRoles(tenantId: string): Observable<PlatformTenantRoleDto[]> {
+    return this.httpClient.get<PlatformTenantRoleDto[]>(`${this.runtimeConfig.platformAdminApiBaseUrl}/tenants/${tenantId}/staff/roles`);
+  }
+
+  listTenantStaffUsers(tenantId: string): Observable<PlatformTenantStaffUserDto[]> {
+    return this.httpClient.get<PlatformTenantStaffUserDto[]>(`${this.runtimeConfig.platformAdminApiBaseUrl}/tenants/${tenantId}/staff/users`);
+  }
+
+  getTenantMenuWorkspace(tenantId: string, branchId: string): Observable<PlatformTenantMenuWorkspaceDto> {
+    return this.httpClient.get<PlatformTenantMenuWorkspaceDto>(`${this.runtimeConfig.platformAdminApiBaseUrl}/tenants/${tenantId}/menu/workspace`, {
+      params: { branchId }
+    });
+  }
+
+  saveTenantMenuWorkspace(
+    tenantId: string,
+    payload: SavePlatformTenantMenuWorkspaceRequestDto
+  ): Observable<PlatformTenantMenuWorkspaceDto> {
+    return this.httpClient.patch<PlatformTenantMenuWorkspaceDto>(
+      `${this.runtimeConfig.platformAdminApiBaseUrl}/tenants/${tenantId}/menu/workspace`,
+      payload
+    );
+  }
+
+  publishTenantMenuWorkspace(tenantId: string, branchId: string): Observable<PlatformTenantMenuWorkspaceDto> {
+    return this.httpClient.post<PlatformTenantMenuWorkspaceDto>(
+      `${this.runtimeConfig.platformAdminApiBaseUrl}/tenants/${tenantId}/menu/workspace/publish`,
+      {},
+      { params: { branchId } }
+    );
+  }
+
+  downloadTenantMenuPdf(
+    tenantId: string,
+    branchId: string,
+    versionStatus: 'DRAFT' | 'PUBLISHED' = 'DRAFT'
+  ): Observable<Blob> {
+    return this.httpClient.get(`${this.runtimeConfig.platformAdminApiBaseUrl}/tenants/${tenantId}/menu/workspace/pdf`, {
+      params: { branchId, versionStatus },
+      responseType: 'blob'
+    });
+  }
+
+  updateTenantStaffUserAccess(
+    tenantId: string,
+    userId: string,
+    payload: UpdatePlatformTenantStaffAccessRequestDto
+  ): Observable<PlatformTenantStaffUserDto> {
+    return this.httpClient.patch<PlatformTenantStaffUserDto>(
+      `${this.runtimeConfig.platformAdminApiBaseUrl}/tenants/${tenantId}/staff/users/${userId}/access`,
+      payload
+    );
+  }
+
+  resetTenantStaffUserPassword(
+    tenantId: string,
+    userId: string,
+    payload: ResetPlatformTenantStaffPasswordRequestDto
+  ): Observable<PlatformTenantStaffUserDto> {
+    return this.httpClient.post<PlatformTenantStaffUserDto>(
+      `${this.runtimeConfig.platformAdminApiBaseUrl}/tenants/${tenantId}/staff/users/${userId}/reset-password`,
+      payload
+    );
   }
 
   createTenant(payload: CreateTenantRequestDto): Observable<TenantDetailDto> {
